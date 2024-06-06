@@ -13,6 +13,7 @@ vignette: >
 knitr::opts_chunk$set(echo = TRUE)
 source_files <- list.files(here::here("R/"), "*.R$")  # locate all .R files
 purrr::map(paste0(here::here("R/"), source_files), ~source(.)) 
+library(tidyverse)
 ```
 
 ## Specify settings
