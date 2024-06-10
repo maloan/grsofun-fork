@@ -2,7 +2,7 @@ grsofun <- function(par, settings){
 
   # Convert forcing files to a tidy format
   # Checks by file. If tidy already, skips automatically
-  settings <- grsofun_make_tidy(settings)
+  settings <- grsofun_tidy(settings)
 
   # Run rsofun
   # Parallelizes runs to chunks of longitudinal bands
@@ -10,9 +10,9 @@ grsofun <- function(par, settings){
 
   # Collect output
   # Only variables and at aggregation level required for NetCDF output
-  error <- grsofun_collect(settings)
+  df <- grsofun_collect(settings, return_data = TRUE)
 
   # Write to NetCDF files
-  error <- grsofun_save_nc(settings)
+  error <- grsofun_save_nc(df, settings)
 
 }

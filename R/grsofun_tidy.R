@@ -1,4 +1,4 @@
-grsofun_make_tidy <- function(settings){
+grsofun_tidy <- function(settings){
 
   # land mask and elevation in one
   error <- map2tidy::map2tidy(
@@ -8,7 +8,8 @@ grsofun_make_tidy <- function(settings){
     latnam = "lat",
     do_chunks = TRUE,
     outdir = settings$dir_landmask_tidy,
-    fileprefix = "WFDEI-elevation"
+    fileprefix = "WFDEI-elevation",
+    overwrite = settings$overwrite
   )
 
   # root zone total whc
@@ -19,7 +20,8 @@ grsofun_make_tidy <- function(settings){
     latnam = "lat",
     do_chunks = TRUE,
     outdir = settings$dir_whc_tidy,
-    fileprefix = "cwdx80_forcing_halfdeg"
+    fileprefix = "cwdx80_forcing_halfdeg",
+    overwrite = settings$overwrite
   )
 
   # # elevation
@@ -42,12 +44,6 @@ grsofun_make_tidy <- function(settings){
 
     # define grid of climate files
     settings$grid_climate <- list(
-      lon_start = -179.75,
-      dlon = 0.5,
-      len_ilon = 720,
-      lat_start = -89.75,
-      dlat = 0.5,
-      len_ilat = 360,
       lonnam = "lon",
       latnam = "lat",
       timenam = "timestp",
@@ -57,7 +53,7 @@ grsofun_make_tidy <- function(settings){
     # make files tidy for each variable
     error <- purrr::map(
       vars,
-      ~grsofun_make_tidy_byvar(., settings)
+      ~grsofun_tidy_byvar(., settings)
     )
 
   }
@@ -83,7 +79,7 @@ grsofun_make_tidy <- function(settings){
   return(settings)
 }
 
-grsofun_make_tidy_byvar <- function(var, settings){
+grsofun_tidy_byvar <- function(var, settings){
 
   # consider data product-specific directory structure and netcdf variable and
   # dimension names

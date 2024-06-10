@@ -9,24 +9,31 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
+```{r setup}
 knitr::opts_chunk$set(echo = TRUE)
 source_files <- list.files(here::here("R/"), "*.R$")  # locate all .R files
 purrr::map(paste0(here::here("R/"), source_files), ~source(.)) 
 library(tidyverse)
+library(rnaturalearth)
+library(cowplot)
 ```
 
 ## Specify settings
 
 ```{r}
 settings <- list(
+  fileprefix = "test",
   model = "pmodel",
   year_start = 2018,  # xxx not yet handled
   year_end = 2018,  # xxx not yet handled
-  lonmin = -180,  # xxx not yet handled
-  lonmax = 180,  # xxx not yet handled
-  latmin = -60,  # xxx not yet handled
-  latmax = 85,  # xxx not yet handled
+  grid = list(
+    lon_start = -179.75,
+    dlon = 0.5,
+    len_ilon = 720,
+    lat_start = -89.75,
+    dlat = 0.5,
+    len_ilat = 360
+    ),
   source_climate = "watch-wfdei",
   dir_climate = "~/data/watch_wfdei",
   dir_climate_tidy = "~/data/watch_wfdei/tidy/",
@@ -39,18 +46,20 @@ settings <- list(
   dir_landmask_tidy = "~/data/archive_legacy/landmasks/WFDEI-elevation_tidy/",
   file_elv = "~/data/archive_legacy/landmasks/WFDEI-elevation.nc",
   dir_elv_tidy = "~/data/archive_legacy/landmasks/WFDEI-elevation_tidy/",
-  overwrite = TRUE,
+  save_drivers = TRUE,
+  dir_drivers = here::here("input/tidy/"),
+  overwrite = FALSE,
   spinupyears = 10,
   recycle = 1,
-  dir_out = "xxx",
-  dir_out_nc = "xxx",
+  dir_out = here::here("output/tidy/"),
+  dir_out_nc = "xxx",  # xxx not yet handled
   save_nc = list(
     gpp = "mon"
   ),
-  nthreads = 1
+  nthreads = 1,
+  ncores_max = 1
 )
 ```
-
 
 ## Specify model parameters
 
@@ -68,32 +77,104 @@ par <- list(
 )
 ```
 
-## Run the model
+## Make forcing tidy
 
+Convert forcing data, provided as NetCDF, into a tidy format (time series data frames for each gridcell along rows) and saved for longitudinal bands in a binary format.
+
+```{r eval=FALSE}
+# Convert forcing files to a tidy format
+# Checks by file. If tidy already, skips automatically
+settings <- grsofun_tidy(settings)
+```
+
+## Run model
+
+Read forcing data and construct the driver object for an rsofun run. Run the model and save outputs in a tidy format in `.rds` files for each longitudinal band.
+
+```{r eval=FALSE}
+# Run rsofun
+# Parallelizes runs to chunks of longitudinal bands
+error <- grsofun_run(par, settings)
+```
+
+## Collect outputs
+
+Read outputs saved in separate files for each longitudinal band. Collect data from all longitudinal bands and apply temporal aggregation steps as specified by the settings.
+
+This can either write the aggregated data again to tidy files by longitudinal band, or return the temporally aggregated data into the R environment.
+
+```{r eval=TRUE, message=FALSE}
+# Collect output
+# Only variables and at aggregation level required for NetCDF output
+df <- grsofun_collect(settings, return_data = TRUE)
+```
+
+## Example plot
+
+Plot a map.
 ```{r}
-out <- grsofun(
-  par,
-  settings
+coast <- rnaturalearth::ne_coastline(
+  scale = 110, 
+  returnclass = "sf"
+  )
+
+# January
+gg1 <- df |> 
+  filter(month == 1) |> 
+  ggplot() +
+  geom_raster(
+    aes(x = lon, y = lat, fill = gpp),
+    show.legend = TRUE
+    ) +
+  geom_sf(
+    data = coast,
+    colour = 'black',
+    linewidth = 0.3
+  )  +
+  coord_sf(
+    ylim = c(-60, 85),
+    expand = FALSE
+  ) +
+  scale_fill_viridis_c(
+    name = expression(paste("gC m"^-2, "s"^-1)),
+    option = "cividis",
+    limits = c(0, 15)
+    ) +
+  theme_void() +
+  labs(
+    subtitle = "January monthly mean"
+  )
+
+# July
+gg2 <- df |> 
+  filter(month == 7) |> 
+  ggplot() +
+  geom_raster(
+    aes(x = lon, y = lat, fill = gpp),
+    show.legend = TRUE
+    ) +
+  geom_sf(
+    data = coast,
+    colour = 'black',
+    linewidth = 0.3
+  )  +
+  coord_sf(
+    ylim = c(-60, 85),
+    expand = FALSE
+  ) +
+  scale_fill_viridis_c(
+    name = expression(paste("gC m"^-2, "s"^-1)),
+    option = "cividis",
+    limits = c(0, 15)
+    ) +
+  theme_void() +
+  labs(
+    subtitle = "July monthly mean"
+  )
+
+cowplot::plot_grid(
+  gg1, 
+  gg2,
+  ncol = 1
 )
 ```
-
-## Forcing data
-
-### WATCH-WFDEI
-
-Get data from all available files for each variable into a tidy format.
-```{r}
-df <- get_forcing(
-  source_climate = "watch-wfdei",
-  dir_climate = "~/data/watch_wfdei/",
-  source_fapar = "modis",
-  dir_fapar = "~/xxx"
-)
-```
-
-This is only one year and only three variables: 1.7 GB. => Need to chunk all data first, then run rsofun by chunks.
-```{r}
-# in GB
-object.size(df) * 1e-9
-```
-
