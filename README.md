@@ -2,7 +2,7 @@
 
 ## Approach
 
-The {grsofun} package provides functions that wrap a call to `runread_pmodel_f()` from the {rsofun} package. This call is a point-scale simulation of the P-model. Functions of {grsofun} enable () simulations on each gridcell of a spatial grid and a parallelisation by gridcells for high computational speed.
+The {grsofun} package provides functions that wrap a call to `runread_pmodel_f()` from the {rsofun} package. This call is a point-scale simulation of the P-model. Functions of {grsofun} enable spatially distributed simulations on each gridcell and a parallelisation by gridcells for high computational speed.
 
 The implementation follows a *tidy* data paradigm. All model input and output are organised as tidy data frames where forcing and output time series are nested inside cells and each row represents one gridcell. Because `runread_pmodel_f()` requires full forcing time series sequences and because reading full time series with global coverage is commonly limited by memory, the forcing data first has to be re-organised as tidy data frames and split into separate files for each longitudinal band. After running the simulations, outputs, written as tidy data frames into separate files for each longitudinal band, have to be collected again before further processing of spatial fields.
 
@@ -60,7 +60,7 @@ settings <- list(
     gpp = "mon"
   ),
   nthreads = 1,   # distribute to multiple nodes for high performance computing - xxx not yet implemented
-  ncores_max = 1  # set to 1 for un-parallel run
+  ncores_max = 1  # number of parallel jobs, set to 1 for un-parallel run
 )
 ```
 
