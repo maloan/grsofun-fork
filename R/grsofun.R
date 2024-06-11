@@ -12,7 +12,7 @@ grsofun <- function(par, settings){
   # Only variables and at aggregation level required for NetCDF output
   df <- grsofun_collect(settings, return_data = TRUE)
 
-  # Write to NetCDF files
+  # Write to NetCDF files - XXX not yet implemented
   error <- grsofun_save_nc(df, settings)
 
 }

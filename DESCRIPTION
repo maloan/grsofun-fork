@@ -22,5 +22,10 @@ Imports:
     parallel,
     map2tidy,
     rgeco
+Suggests:
+    here,
+    cowplot,
+    rnaturalearth,
+    ggplot2
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1

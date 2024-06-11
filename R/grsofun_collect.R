@@ -105,7 +105,7 @@ grsofun_collect_byilon <- function(
   if (nrow(ddf) > 0){
     # aggregate temporally to mean
     # to monthly
-    vars <- names(settings$save_nc[settings$save_nc == "mon"])
+    vars <- names(settings$save[settings$save == "mon"])
     mdf <- ddf |>
       tidyr::unnest(data) |>
       dplyr::mutate(

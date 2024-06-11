@@ -4,8 +4,8 @@ grsofun_run <- function(par, settings){
 
     if (settings$ncores_max == 1){
       # Do not parallelize
-      # out <- tibble(ilon = 292) |>
-      out <- tibble(ilon = seq(settings$grid$len_ilon)) |>
+      # out <- dplyr::tibble(ilon = 292) |>
+      out <- dplyr::tibble(ilon = seq(settings$grid$len_ilon)) |>
           dplyr::mutate(out = purrr::map(
           ilon,
           ~grsofun_run_byilon(
@@ -44,7 +44,7 @@ grsofun_run <- function(par, settings){
 
       # distribute computation across the cores, calculating for all longitudinal
       # indices of this chunk
-      out <- tibble(ilon = seq(settings$grid$len_ilon)) |>
+      out <- dplyr::tibble(ilon = seq(settings$grid$len_ilon)) |>
         multidplyr::partition(cl) |>
         dplyr::mutate(out = purrr::map(
           ilon,
@@ -108,7 +108,7 @@ grsofun_run_bychunk <- function(chunk, nthreads, par, settings){
 
   # distribute computation across the cores, calculating for all longitudinal
   # indices of this chunk
-  out <- tibble(ilon = vec_index) |>
+  out <- dplyr::tibble(ilon = vec_index) |>
     multidplyr::partition(cl) |>
     dplyr::mutate(out = purrr::map(
       ilon,
@@ -269,7 +269,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
         year_start <- min(lubridate::year(dates))
         year_end <- max(lubridate::year(dates))
 
-        ddf <- tibble(
+          ddf <- dplyr::tibble(
           date = seq(
             from = lubridate::ymd(paste0(year_start, "-01-01")),
             to = lubridate::ymd(paste0(year_end, "-12-31")),
