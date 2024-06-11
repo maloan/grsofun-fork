@@ -177,4 +177,4 @@ cowplot::plot_grid(
 )
 ```
 
-![Global distribution of monthly mean GPP in January (top) and July (bottom).](fig/gpp_demo.png)
+![Global distribution of monthly mean GPP in January (top) and July (bottom).](man/figures/gpp_demo.png)
