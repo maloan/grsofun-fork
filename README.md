@@ -23,6 +23,8 @@ library(cowplot)
 
 ### Specify settings
 
+Note: currently, {grsofun} is set up run in demo mode with a prescribed constant CO2 and globally uniform constant cloud cover. This is to be accounted for by reading from data.
+
 ``` r
 settings <- list(
   fileprefix = "test",  # simulation name defined by the user

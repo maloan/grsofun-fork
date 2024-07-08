@@ -181,11 +181,11 @@ grsofun_run_byilon <- function(ilon, par, settings){
         dplyr::mutate(
           Tair = Tair - 273.15,  # K -> deg C
           ppfd = SWdown * kfFEC * 1.0e-6,  # W m-2 -> mol m-2 s-1
-          vapr = calc_vp(
+          vapr = rgeco::calc_vp(
             qair = Qair,
             patm = PSurf
           ),
-          vpd = calc_vpd(
+          vpd = rgeco::calc_vpd(
             eact = vapr,
             tc = Tair,
             patm = PSurf
@@ -269,15 +269,17 @@ grsofun_run_byilon <- function(ilon, par, settings){
         year_start <- min(lubridate::year(dates))
         year_end <- max(lubridate::year(dates))
 
-          ddf <- dplyr::tibble(
+        # create a data frame that spans all dates between start and end of simulation
+        # consider only complete years
+        ddf <- dplyr::tibble(
           date = seq(
             from = lubridate::ymd(paste0(year_start, "-01-01")),
             to = lubridate::ymd(paste0(year_end, "-12-31")),
             by = "days"
           ))
 
+        # function to linearly interpolate (leaves trailing NAs)
         interpolate2daily_fpar <- function(df, ddf){
-          # linearly interpolate (leaves trailing NAs)
           ddf <- ddf |>
             dplyr::left_join(
               df,
