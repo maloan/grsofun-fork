@@ -1,5 +1,7 @@
 # grsofun: Global rsofun runs
 
+*Author: Benjamin Stocker*
+
 ## Approach
 
 The {grsofun} package provides functions that wrap a call to `runread_pmodel_f()` from the {rsofun} package. This call is a point-scale simulation of the P-model. Functions of {grsofun} enable spatially distributed simulations on each gridcell and a parallelisation by gridcells for high computational speed.
