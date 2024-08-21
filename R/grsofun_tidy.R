@@ -43,14 +43,6 @@ grsofun_tidy <- function(settings){
     # data-product specific variable names
     vars <- c("Tair", "Rainf", "Snowf", "Qair", "SWdown", "PSurf")
 
-    # define grid of climate files
-    settings$grid_climate <- list(
-      lonnam = "lon",
-      latnam = "lat",
-      timenam = "timestp",
-      timedimnam = "tstep"
-    )
-
     # make files tidy for each variable
     error <- purrr::map(
       vars,
@@ -75,6 +67,10 @@ grsofun_tidy <- function(settings){
       overwrite = TRUE
       # ncores = 2  # parallel::detectCores()
     )
+  } else {
+    stop("
+    FAPAR inputs need case-by-case modification of the code in grsofun.
+    Your input to 'settings$source_fapar' does not (yet) appear to be supported.")
   }
 
   return(settings)
@@ -91,24 +87,48 @@ grsofun_tidy_byvar <- function(var, settings){
       pattern = ".nc",
       full.names = TRUE
     )
+
+    outfile_prefix_value <- paste0(var, "_daily_WFDEI")
+
+    # define grid of climate files # TODO: this is actually not needed specifically for climate files, but all files need to be checked and asserted
+    settings$grid_climate <- list(
+      lonnam = "lon",
+      latnam = "lat",
+      timenam = "tstep" # or timestp??
+    )
+
+    # since watch-wfdei files do not appear to have a CF-compliant time coordinate description we need to define a workaround
+    fgetdate_function <- function(fn){
+      first_day <-
+        gsub(".*_WFDEI_((CRU)*_*)([0-9]*).nc","\\3", x=basename(fn)) |>
+        lubridate::ym() #|>
+      # lubridate::days_in_month()
+
+      return(seq(from = first_day,
+                 to   = first_day + months(1) - 1, # go to the end of the month
+                 by   = "day") |>
+               as.character())
+    }
+  } else {
+    stop("
+    Climate data inputs need case-by-case modification of the code in grsofun.
+    Your input to 'settings$source_climate' does not (yet) appear to be supported.")
   }
 
   # load and convert
-  error <- map2tidy::map2tidy(
-    nclist = list_filnams,
-    varnam = var,
-    lonnam = settings$grid_climate$lonnam,
-    latnam = settings$grid_climate$latnam,
+  result_climate_list <- map2tidy::map2tidy(
+    nclist  = list_filnams,
+    varnam  = var,
+    lonnam  = settings$grid_climate$lonnam,
+    latnam  = settings$grid_climate$latnam,
     timenam = settings$grid_climate$timenam,
-    timedimnam = settings$grid_climate$timedimnam,
-    do_chunks = TRUE,
-    outdir = settings$dir_climate_tidy,
-    fileprefix = paste0(var, "_daily_WFDEI"),
-    single_basedate = FALSE,
-    overwrite = settings$overwrite,
-    # ncores = 2  # parallel::detectCores()
-    ncores = 12  # parallel::detectCores()
+    do_chunks  = TRUE,
+    outdir     = settings$dir_climate_tidy,
+    fileprefix = outfile_prefix_value,
+    overwrite  = settings$overwrite,
+    fgetdate   = fgetdate_function,
+    ncores     = settings$ncores_max  # parallel::detectCores()
   )
 
-  return(error)
+  return(result_climate_list)
 }
