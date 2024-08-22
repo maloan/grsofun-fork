@@ -72,7 +72,7 @@ testthat::test_that("test grsofun_tidy()", {
   out_tidy_02 <- grsofun_tidy(settings,
                               filter_lon_between_degrees = c(-21, -17.5))
 
-  testthat::expect_equal(nrow(bind_rows(out_tidy_02)), 10)
+  testthat::expect_equal(nrow(bind_rows(out_tidy_02)), 17)
 
   testthat::expect_identical(
     list.files(settings$dir_landmask_tidy),
@@ -85,9 +85,9 @@ testthat::test_that("test grsofun_tidy()", {
   fresh_file <- readRDS(file.path(settings$dir_landmask_tidy,"WFDEI-elevation_LON_-017.750.rds"))
   testthat::expect_equal(
     fresh_file[c(1,5,25,53),],
-    tibble(lon       = c(-17.75, -17.75, -17.75, -17.75),
-           lat       = c(-89.75, -87.75, -77.75, 81.75),
-           elevation = c(2865.37524414062, 2527.84228515625, 1588.33532714844, 44)),
+    dplyr::tibble(lon       = c(-17.75, -17.75, -17.75, -17.75),
+                  lat       = c(-89.75, -87.75, -77.75, 81.75),
+                  elevation = c(2865.37524414062, 2527.84228515625, 1588.33532714844, 44)),
     tolerance = 0.01)
 
 

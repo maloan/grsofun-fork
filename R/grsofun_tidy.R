@@ -78,6 +78,11 @@ grsofun_tidy <- function(settings, ...){
         source_subdirectory <- "[VAR]_daily"
         source_pattern      <- ".nc"
         outfile_suffix      <- "_daily_WFDEI"
+        grid_climate_names <- list(
+          lonnam = "lon",
+          latnam = "lat",
+          timenam = "tstep" # or timestp??
+        )
 
         # watch-wfdei files do not appear to have a CF-compliant time coordinate description.
         # Therefore we need to define a workaround with `fgetdate`
@@ -90,12 +95,6 @@ grsofun_tidy <- function(settings, ...){
                    as.character())
         }
 
-        # # define grid of climate files # TODO: this is actually not needed specifically for climate files, but all files need to be checked and asserted
-        # grid_climate_names <- list(
-        #   lonnam = "lon",
-        #   latnam = "lat",
-        #   timenam = "tstep" # or timestp??
-        # )
       } else if(settings$source_climate == "some-other-climate-source-to-be-defined") {
         # NOTE: add future sources here
         # define: vars, outfile_suffix, source_subdirectory, source_pattern, fgetdate_function
@@ -128,7 +127,7 @@ grsofun_tidy <- function(settings, ...){
           ...)
         )
 
-      bind_rows(res_climate_list)
+      dplyr::bind_rows(res_climate_list)
 
     } else {
       data.frame(input_path = settings$file_whc, msg = "No climate file found.")
