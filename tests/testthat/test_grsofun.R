@@ -63,7 +63,7 @@ testthat::test_that("test grsofun_tidy()", {
     list(res_landmask     = data.frame(input_path = NA, msg = "No landmask file found."),
          res_whc          = data.frame(input_path = NA, msg = "No whc file found."),
          res_elv          = data.frame(input_path = NA, msg = "No elv file found."),
-         res_climate_list = data.frame(input_path = NA, msg = "No climate file found."),
+         res_climate_df   = data.frame(input_path = NA, msg = "No climate file found."),
          res_fapar        = data.frame(input_path = NA, msg = "No fapar file found.")))
 
   # Test subset of certain longitudes: (only test landmask and , keep others at NA)
