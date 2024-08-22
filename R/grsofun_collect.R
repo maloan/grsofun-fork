@@ -10,7 +10,8 @@ grsofun_collect <- function(
   if (settings$ncores_max == 1){
 
     # un-parallel alternative
-    df <- tibble(ilon = seq(settings$grid$len_ilon)) |>
+    len_ilon <- settings$grid$len_ilon
+    df <- dplyr::tibble(ilon = seq(len_ilon)) |>
       dplyr::mutate(out = purrr::map(
         ilon,
         ~grsofun_collect_byilon(
@@ -47,8 +48,7 @@ grsofun_collect <- function(
                                     "purrr",
                                     "tidyr",
                                     "readr",
-                                    "here",
-                                    "magrittr"
+                                    "here"
       )) |>
       multidplyr::cluster_assign(
         grsofun_collect_byilon = grsofun_collect_byilon   # make the function known for each core
@@ -56,7 +56,8 @@ grsofun_collect <- function(
 
     # distribute computation across the cores, calculating for all longitudinal
     # indices of this chunk
-    df <- tibble(ilon = seq(settings$grid$len_ilon)) |>
+    len_ilon <- settings$grid$len_ilon
+    df <- dplyr::tibble(ilon = seq(len_ilon)) |>
       multidplyr::partition(cl) |>
       dplyr::mutate(out = purrr::map(
         ilon,
@@ -69,7 +70,7 @@ grsofun_collect <- function(
 
     if (return_data){
       df <- df |>
-        collect() |>
+        dplyr::collect() |>
         dplyr::mutate(len = purrr::map_int(out, ~nrow(.))) |>
         dplyr::filter(len > 0) |>
         dplyr::select(-len) |>
@@ -114,10 +115,10 @@ grsofun_collect_byilon <- function(
         month = lubridate::month(date)
       ) |>
       dplyr::group_by(sitename, year, month) |>
-      summarise(across(all_of(vars), \(x) mean(x, na.rm = TRUE)), .groups = "drop") |>
+      dplyr::summarise(dplyr::across(dplyr::all_of(vars), \(x) mean(x, na.rm = TRUE)), .groups = "drop") |>
 
       # add lon and lat to data frame
-      left_join(
+      dplyr::left_join(
         ddf |>
           dplyr::select(sitename, site_info) |>
           tidyr::unnest(site_info) |>
@@ -126,7 +127,7 @@ grsofun_collect_byilon <- function(
       )
 
   } else {
-    mdf <- tibble()
+    mdf <- dplyr::tibble()
   }
 
   if (return_data){

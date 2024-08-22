@@ -89,7 +89,7 @@ par <- list(
 Convert forcing data, provided as NetCDF, into a tidy format (time series data frames for each gridcell along rows) and saved for longitudinal bands in a binary format.
 
 ```{r eval=FALSE}
-settings <- grsofun_tidy(settings)
+tidy_out <- grsofun_tidy(settings)
 ```
 
 ### Run model

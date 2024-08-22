@@ -3,7 +3,7 @@ grsofun <- function(par, settings){
 
   # Convert forcing files to a tidy format
   # Checks by file. If tidy already, skips automatically
-  settings <- grsofun_tidy(settings)
+  tidy_out <- grsofun_tidy(settings)
 
   # Run rsofun
   # Parallelizes runs to chunks of longitudinal bands

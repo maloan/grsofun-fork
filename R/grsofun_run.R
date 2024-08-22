@@ -1,12 +1,18 @@
+#' @param par ...
+#' @param settings ...
+#' @param vec_index Longitude indices to process
 #' @export
-grsofun_run <- function(par, settings){
+grsofun_run <- function(par, settings, vec_index = NULL){
 
   if (settings$nthreads == 1){
+    len_ilon <- settings$grid$len_ilon
+    vec_index = if(is.null(vec_index)){seq(len_ilon)} else {vec_index}
+    message(paste0(vec_index, collapse=","))
 
     if (settings$ncores_max == 1){
       # Do not parallelize
       # out <- dplyr::tibble(ilon = 292) |>
-      out <- dplyr::tibble(ilon = seq(settings$grid$len_ilon)) |>
+      out <- dplyr::tibble(ilon = vec_index) |>
           dplyr::mutate(out = purrr::map(
           ilon,
           ~grsofun_run_byilon(
@@ -33,7 +39,6 @@ grsofun_run <- function(par, settings){
                                       "dplyr",
                                       "purrr",
                                       "tidyr",
-                                      "magrittr",
                                       "readr",
                                       "grsofun",
         )) |>
@@ -44,7 +49,7 @@ grsofun_run <- function(par, settings){
 
       # distribute computation across the cores, calculating for all longitudinal
       # indices of this chunk
-      out <- dplyr::tibble(ilon = seq(settings$grid$len_ilon)) |>
+      out <- dplyr::tibble(ilon = vec_index) |>
         multidplyr::partition(cl) |>
         dplyr::mutate(out = purrr::map(
           ilon,
@@ -58,68 +63,70 @@ grsofun_run <- function(par, settings){
     }
 
   } else {
-    # Create chunks of longitude indeces and send to separate threads
-    # distribute to separate notes (distributed to cores within node is done
+    # Create chunks of longitude indices and send to separate threads
+    # distribute to separate nodes (distributed to cores within node is done
     # inside functions)
+    stop("Option nthreads > 1 is currently not implemented.")
     purrr::map(
       seq(settings$nthreads),
       ~grsofun_run_bychunk(., settings$nthreads, par, settings)
     )
-
   }
-
 }
 
-#' @export
-grsofun_run_bychunk <- function(chunk, nthreads, par, settings){
-
-  # XXX: make this a system call for running a script containing this code
-
-  # determine longitude indices to process
-  vec_index <- map2tidy::get_index_by_chunk(
-    chunk,                           # counter for chunks
-    nthreads,                        # total number of chunks
-    settings$grid_climate$len_ilon   # total number of longitude indices
-  )
-
-  # number of cores to use for this thread
-  # keep one core free
-  ncores <- ifelse(
-    is.na(settings$ncores_max),
-    max(parallel::detectCores() - 1, 1),
-    min(settings$ncores_max, max(parallel::detectCores() - 1, 1))
-  )
-
-  # parallelize job
-  # set up the cluster, sending required objects to each core
-  cl <- multidplyr::new_cluster(ncores) |>
-    multidplyr::cluster_library(c("map2tidy",
-                                  "dplyr",
-                                  "purrr",
-                                  "tidyr",
-                                  "magrittr",
-                                  "readr",
-                                  "grsofun",
-                                  )) |>
-    multidplyr::cluster_assign(
-      grsofun_run_byilon = grsofun_run_byilon,   # make the function known for each core
-      read_forcing_byvar_byilon = read_forcing_byvar_byilon
-    )
-
-  # distribute computation across the cores, calculating for all longitudinal
-  # indices of this chunk
-  out <- dplyr::tibble(ilon = vec_index) |>
-    multidplyr::partition(cl) |>
-    dplyr::mutate(out = purrr::map(
-      ilon,
-      ~grsofun_run_byilon(
-        .,
-        par,
-        settings
-      ))
-    )
-
-}
+##' @export
+# grsofun_run_bychunk <- function(chunk, nthreads, par, settings){
+#
+#   stop("Option nthreads > 1 is currently not implemented.")
+#
+#   # XXX: make this a system call for running a script containing this code
+#
+#   # determine longitude indices to process
+#   len_ilon <- settings$grid_climate$len_ilon
+#   vec_index <- map2tidy::get_index_by_chunk(
+#     chunk,                           # counter for chunks
+#     nthreads,                        # total number of chunks
+#     len_ilon                         # total number of longitude indices
+#   )
+#
+#   # number of cores to use for this thread
+#   # keep one core free
+#   ncores <- ifelse(
+#     is.na(settings$ncores_max),
+#     max(parallel::detectCores() - 1, 1),
+#     min(settings$ncores_max, max(parallel::detectCores() - 1, 1))
+#   )
+#
+#   # parallelize job
+#   # set up the cluster, sending required objects to each core
+#   cl <- multidplyr::new_cluster(ncores) |>
+#     multidplyr::cluster_library(c("map2tidy",
+#                                   "dplyr",
+#                                   "purrr",
+#                                   "tidyr",
+#                                   "magrittr",
+#                                   "readr",
+#                                   "grsofun",
+#                                   )) |>
+#     multidplyr::cluster_assign(
+#       grsofun_run_byilon = grsofun_run_byilon,   # make the function known for each core
+#       read_forcing_byvar_byilon = read_forcing_byvar_byilon
+#     )
+#
+#   # distribute computation across the cores, calculating for all longitudinal
+#   # indices of this chunk
+#   out <- dplyr::tibble(ilon = vec_index) |>
+#     multidplyr::partition(cl) |>
+#     dplyr::mutate(out = purrr::map(
+#       ilon,
+#       ~grsofun_run_byilon(
+#         .,
+#         par,
+#         settings
+#       ))
+#     )
+#
+# }
 
 #' @export
 grsofun_run_byilon <- function(ilon, par, settings){
@@ -128,6 +135,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
   # for DE-Tha (DE-Tha  lon = 13.6, lat = 51.0, elv = 380 m), use ilon = 388 (lon = 13.75, lat = 50.75, sitename = grid_ilon_388_ilat_174)
 
   if (settings$save_drivers){
+    dir.create(settings$dir_drivers, recursive = TRUE, showWarnings = FALSE) # TODO: make this emit a message
     filnam_drivers <- paste0(settings$dir_drivers, "/", settings$fileprefix, "_ilon_", ilon, ".rds")
   }
 
@@ -173,8 +181,8 @@ grsofun_run_byilon <- function(ilon, par, settings){
         ~read_forcing_byvar_byilon(., ilon, settings)
       ) |>
         purrr::reduce(
-          left_join,
-          join_by(lon, lat, time)
+          dplyr::left_join,
+          dplyr::join_by(lon, lat, time)
         ) |>
 
         # convert units and rename
@@ -194,7 +202,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
         ) |>
 
         # XXX try
-        mutate(
+        dplyr::mutate(
           netrad = NA,
           ccov = 0.5,
           co2 = 400,
@@ -248,7 +256,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
       if (avl_fapar){
 
         df_fapar_mon <- df_fapar_mon |>
-          mutate(data = purrr::map(data, ~dplyr::rename(., date = time)))
+          dplyr::mutate(data = purrr::map(data, ~dplyr::rename(., date = time)))
 
         # # xxx problem: no decembers are read after 2014
         # df_fapar_mon |>
@@ -309,9 +317,9 @@ grsofun_run_byilon <- function(ilon, par, settings){
         }
 
         df_fapar <- df_fapar_mon |>
-          mutate(data = purrr::map(data, ~interpolate2daily_fpar(., ddf))) |>
-          mutate(data = purrr::map(data, ~dplyr::select(., -fpar))) |>
-          mutate(data = purrr::map(data, ~dplyr::rename(., fapar = fpar_daily)))
+          dplyr::mutate(data = purrr::map(data, ~interpolate2daily_fpar(., ddf))) |>
+          dplyr::mutate(data = purrr::map(data, ~dplyr::select(., -fpar))) |>
+          dplyr::mutate(data = purrr::map(data, ~dplyr::rename(., fapar = fpar_daily)))
 
         # df_fapar$data[[1]] |>
         #   ggplot(aes(date, fpar)) +
@@ -333,7 +341,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
       } else {
         # fapar not available - set to zero
         df_forcing <- df_climate |>
-          mutate(data = purrr::map(data, ~dplyr::mutate(., fapar = 0)))
+          dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., fapar = 0)))
       }
     }
 
@@ -355,13 +363,13 @@ grsofun_run_byilon <- function(ilon, par, settings){
       df <- df |>
 
         # merge with forcing time series
-        left_join(
+        dplyr::left_join(
           df_forcing |>
             dplyr::rename(forcing = data),
-          join_by(lon, lat)
+          dplyr::join_by(lon, lat)
         ) |>
 
-        mutate(ilat = seq(n())) |>
+        dplyr::mutate(ilat = seq(dplyr::n())) |>
 
         # create simulation parameters (common for all)
         # construct site name from longitude and latitude indices
@@ -423,7 +431,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
 
   } else {
 
-    df <- read_rds(filnam_drivers)
+    df <- readr::read_rds(filnam_drivers)
 
   }
 
@@ -438,7 +446,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
   # df_forcing_empty <- df_forcing_empty[[1]] |>
   #   slice(1) |>
   #   mutate(
-  #     across(
+  #     dplyr::across(
   #       c(temp, rain, vpd, ppfd, netrad, ccov, snow, co2, patm, tmin, tmax, fapar),
   #       ~ NA
   #       ))
@@ -509,6 +517,8 @@ grsofun_run_byilon <- function(ilon, par, settings){
   #   ggplot(aes(date, gpp)) +
   #   geom_line()
 
+  dir.create(settings$dir_out,     recursive = TRUE, showWarnings = FALSE)  # TODO: make this emit a message
+
   outpath <- paste0(settings$dir_out, settings$fileprefix, "_ilon_", ilon, ".rds")
   message(paste("Writing file", outpath, "..."))
   readr::write_rds(out, file = outpath)
@@ -519,7 +529,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
 read_forcing_byvar_byilon <- function(var, ilon, settings){
 
   if (settings$source_climate == "watch-wfdei"){
-    df <- read_rds(paste0(settings$dir_climate, "/tidy/", var, "_daily_WFDEI_ilon_", ilon, ".rds")) |>
+    df <- readr::read_rds(paste0(settings$dir_climate_tidy, var, "_daily_WFDEI_ilon_", ilon, ".rds")) |>
     tidyr::unnest(data)
   }
 
