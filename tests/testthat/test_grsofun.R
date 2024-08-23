@@ -42,7 +42,7 @@ testthat::test_that("test grsofun_tidy()", {
     save_drivers = TRUE,  # whether rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run().
     # dir_drivers = here::here("input/out_tidy/"),             # path where rsofun drivers are to be written
     dir_drivers = "~/data/scratch/fbernhard/grsofun-input/",  # path where rsofun drivers are to be written
-    overwrite = FALSE,    # whether files with tidy forcing data and drivers are to be overwritten. If false, reads files if available instead of re-creating them.
+    overwrite_intermediate = FALSE,    # whether files with tidy forcing data and drivers are to be overwritten. If false, reads files if available instead of re-creating them.
     spinupyears = 10,     # model spin-up length
     recycle = 1,          # climate forcing recycling during the spinup
     # dir_out = here::here("output/out_tidy/"),                # path for tidy model output

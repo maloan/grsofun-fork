@@ -51,7 +51,7 @@ grsofun_tidy <- function(settings, ...){
       do_chunks = TRUE,
       outdir = settings$dir_landmask_tidy,
       fileprefix = "WFDEI-elevation",
-      overwrite = settings$overwrite,
+      overwrite = settings$overwrite_intermediate,
       ncores     = settings$ncores_max,  # parallel::detectCores()
       ...
     )
@@ -69,7 +69,7 @@ grsofun_tidy <- function(settings, ...){
       do_chunks = TRUE,
       outdir = settings$dir_whc_tidy,
       fileprefix = "cwdx80_forcing_halfdeg",
-      overwrite = settings$overwrite,
+      overwrite = settings$overwrite_intermediate,
       ncores     = settings$ncores_max,  # parallel::detectCores()
       ...
     )
@@ -87,7 +87,7 @@ grsofun_tidy <- function(settings, ...){
       do_chunks = TRUE,
       outdir = settings$dir_elv_tidy,
       fileprefix = "WFDEI-elevation", # fileprefix = "ETOPO1_Bed_g_geotiff_halfdeg",
-      overwrite = settings$overwrite,
+      overwrite = settings$overwrite_intermediate,
       ncores    = settings$ncores_max,  # parallel::detectCores()
       ...
     )
@@ -149,7 +149,7 @@ grsofun_tidy <- function(settings, ...){
           do_chunks  = TRUE,
           outdir     = settings$dir_climate_tidy,
           fileprefix = paste0(var, outfile_suffix),
-          overwrite  = settings$overwrite,
+          overwrite  = settings$overwrite_intermediate,
           fgetdate   = ifelse(is.function(fgetdate_function), fgetdate_function, NA),
           # filter_lon_between_degrees = c(-1, 1), # TODO: only for development
           ncores     = settings$ncores_max,  # parallel::detectCores()
@@ -176,7 +176,7 @@ grsofun_tidy <- function(settings, ...){
           do_chunks = TRUE,
           outdir = settings$dir_fapar_tidy,
           fileprefix = "MODIS-C006_MOD15A2_LAI_FPAR_zmaw",
-          overwrite = TRUE,
+          overwrite = settings$overwrite_intermediate,
           # filter_lon_between_degrees = c(-1,1), # TODO: only for development
           ncores     = settings$ncores_max,  # parallel::detectCores()
           ...

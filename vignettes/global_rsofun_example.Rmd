@@ -65,7 +65,7 @@ settings <- list(
   dir_elv_tidy = "~/data/archive_legacy/landmasks/WFDEI-elevation_tidy/",   # path to where tidy elevation data is to be written
   save_drivers = TRUE,   # whether rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run().
   dir_drivers = here::here("input/tidy/"),  # path where rsofun drivers are to be written
-  overwrite = FALSE,    # whether files with tidy forcing data and drivers are to be overwritten. If false, reads files if available instead of re-creating them.
+  overwrite_intermediate = FALSE,    # whether files with tidy forcing data and drivers are to be overwritten. If false, reads files if available instead of re-creating them.
   spinupyears = 10,     # model spin-up length
   recycle = 1,          # climate forcing recycling during the spinup
   dir_out = here::here("output/tidy/"),     # path for tidy model output

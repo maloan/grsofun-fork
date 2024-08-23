@@ -138,7 +138,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
     filnam_drivers <- file.path(settings$dir_drivers, paste0(settings$fileprefix, "_", LON_string, ".rds"))
   }
 
-  if (settings$overwrite || !file.exists(filnam_drivers)){
+  if (settings$overwrite_intermediate || !file.exists(filnam_drivers)){
 
     # get land mask - variable name hard coded
     df <- readr::read_rds(paste0(settings$dir_landmask_tidy, "WFDEI-elevation_", LON_string, ".rds")) |>
