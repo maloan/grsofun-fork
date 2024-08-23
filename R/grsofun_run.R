@@ -49,8 +49,10 @@ grsofun_run <- function(par, settings, list_of_LON_str){
                                       "grsofun"
         )) |>
         multidplyr::cluster_assign(
-          grsofun_run_byLON = grsofun_run_byLON,   # make the function known for each core
-          read_forcing_byvar_byLON = read_forcing_byvar_byLON
+          grsofun_run_byLON        = grsofun_run_byLON,   # make the function known for each core
+          read_forcing_byvar_byLON = read_forcing_byvar_byLON,
+          par                      = par,
+          settings                 = settings
         )
 
       # distribute computation across the cores, calculating for all longitudinal
