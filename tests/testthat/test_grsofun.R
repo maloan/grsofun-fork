@@ -32,8 +32,7 @@ testthat::test_that("test grsofun_tidy()", {
     ),                      #   the temporal resolution to which global output is to be aggregated.
 
     ### intermediate model output
-    save_drivers = TRUE,   # whether rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run().
-    dir_out_drivers = "/data_2/scratch/fbernhard/grsofun-input-drivers/",  # If a path is provided rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run(). If dir_out_drivers is 'NA' driver object are not stored.
+    dir_out_drivers = NA, #"/data_2/scratch/fbernhard/grsofun-input-drivers/",  # If a path is provided rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run(). If dir_out_drivers is 'NA' driver object are not stored.
     overwrite_intermediate = FALSE,      # whether files with tidy forcing data and drivers are to be overwritten. If false, reads files if available instead of re-creating them.
 
     ### tidy model input config:

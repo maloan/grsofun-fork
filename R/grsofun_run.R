@@ -133,7 +133,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
   # for DE-Tha (DE-Tha  lon = 13.6, lat = 51.0, elv = 380 m),
   #            use (lon = 13.75, lat = 50.75, sitename = grid_LON_+013.750_LAT_+050.750)
 
-  if (settings$save_drivers){
+  if (!is.na(settings$dir_out_drivers)){
     dir.create(settings$dir_out_drivers, recursive = TRUE, showWarnings = FALSE) # TODO: make this emit a message
     filnam_drivers <- file.path(settings$dir_out_drivers, paste0(settings$fileprefix, "_", LON_string, ".rds"))
   }
@@ -433,7 +433,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
         )
     }
 
-    if (settings$save_drivers){
+    if (!is.na(settings$dir_out_drivers)){
       message(paste("Writing file", filnam_drivers, "..."))
       readr::write_rds(df, file = filnam_drivers)
     }
