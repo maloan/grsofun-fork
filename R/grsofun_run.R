@@ -130,7 +130,8 @@ grsofun_run <- function(par, settings, list_of_LON_str){
 grsofun_run_byLON <- function(LON_string, par, settings){
   # e.g LON_string = "LON_+046.750"
 
-  # for DE-Tha (DE-Tha  lon = 13.6, lat = 51.0, elv = 380 m), use ilon = 388 (lon = 13.75, lat = 50.75, sitename = grid_ilon_388_ilat_174)
+  # for DE-Tha (DE-Tha  lon = 13.6, lat = 51.0, elv = 380 m),
+  #            use (lon = 13.75, lat = 50.75, sitename = grid_LON_+013.750_LAT_+050.750)
 
   if (settings$save_drivers){
     dir.create(settings$dir_drivers, recursive = TRUE, showWarnings = FALSE) # TODO: make this emit a message
@@ -374,12 +375,15 @@ grsofun_run_byLON <- function(LON_string, par, settings){
           dplyr::join_by(lon, lat)
         ) |>
 
-        dplyr::mutate(ilat = seq(dplyr::n())) |>
-
-        # create simulation parameters (common for all)
         # construct site name from longitude and latitude indices
         dplyr::mutate(
-          sitename = paste0("grid_", LON_string, "_ilat_", ilat), # TODO change this to LAT_string
+          # LAT_string = sprintf("LAT_%+08.3f", lat),
+          # sitename = paste0("grid_", LON_string, "_", LAT_string)
+          sitename = paste0("grid_", LON_string, "_", sprintf("LAT_%+08.3f", lat))
+        ) |>
+
+        # create simulation parameters (common for all)
+        dplyr::mutate(
           spinup = TRUE,
           spinupyears = settings$spinupyears,
           recycle = settings$recycle,
@@ -469,7 +473,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
   #   right_join(
   #     df |>
   #       select(sitename, forcing) |>
-  #       filter(sitename == "grid_ilon_388_ilat_174") |>
+  #       filter(sitename == "grid_LON_+013.750_LAT_+050.750") |>
   #       unnest(forcing),
   #     by = c("date")
   #   )
@@ -517,7 +521,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
 
   # # xxx test
   # out |>
-  #   filter(sitename == "grid_ilon_388_ilat_174") |>
+  #   filter(sitename == "grid_LON_+013.750_LAT_+050.750") |>
   #   unnest(data) |>
   #   ggplot(aes(date, gpp)) +
   #   geom_line()
