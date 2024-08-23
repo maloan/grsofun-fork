@@ -12,32 +12,35 @@
 
 grsofun_tidy <- function(settings, ...){
 
-  # check beforehand if all outdirs are writable:
-  is_writable <- function(path){file.access(path, mode = 2) == 0}
-  assert_writable <- function(path){
-    is_writable(path) ||
-      stop(sprintf("Path %s is not writable. Please correct!", path))
-  }
-  list_writable_directories <- lapply(
-    settings[c(# outfiles of grsofun_tidy()
-               "dir_out_tidy_landmask",
-               "dir_out_tidy_whc",
-               "dir_out_tidy_fapar",
-               "dir_out_tidy_climate",
-               # outfiles of grsofun_run()
-               "dir_out_drivers",
-               "dir_out"
-               # outfiles of grsofun_collect()
-               # "dir_out_nc"
-               )],
-    assert_writable)
-  if(suppressWarnings(!all(list_writable_directories))){stop(
-    "Not all out directories are writable. Make sure you have the permissions for:",
-    "\n",
-    paste(capture.output(print(settings[
-      names(list_writable_directories[!unlist(list_writable_directories)])
-    ])), collapse = "\n")
-  )}
+  # check beforehand if all outdirs (or their ) are writable:
+  # # TODO: deactivated because not yet working with subdirectories, i.e. whe
+  # #       mkdir has to create mutliple subfolders...
+  # is_writable <- function(path){file.access(path, mode = 2) == 0}
+  # # assert_writable <- function(path){
+  # #   is_writable(path) ||
+  # #     stop(sprintf("Path %s is not writable. Please correct!", path))
+  # # }
+  # list_writable_directories <- lapply(
+  #   settings[c(# outfiles of grsofun_tidy()
+  #              "dir_out_tidy_landmask",
+  #              "dir_out_tidy_whc",
+  #              "dir_out_tidy_fapar",
+  #              "dir_out_tidy_climate",
+  #              # outfiles of grsofun_run()
+  #              "dir_out_drivers",
+  #              "dir_out"
+  #              # outfiles of grsofun_collect()
+  #              # "dir_out_nc"
+  #              )],
+  #   # assert_writable)
+  #   is_writable)
+  # if(suppressWarnings(!all(list_writable_directories))){stop(
+  #   "Not all out directories are writable. Make sure you have the permissions for:",
+  #   "\n",
+  #   paste(capture.output(print(settings[
+  #     names(list_writable_directories[!unlist(list_writable_directories)])
+  #   ])), collapse = "\n")
+  # )}
 
 
 
