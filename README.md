@@ -39,12 +39,8 @@ settings <- list(
   recycle     = 1,        # climate forcing recycling during the spinup
 
   ### HPC config:
-  nthreads = 1,   # distribute to multiple nodes for high performance computing - xxx not yet implemented -
-  # >>> I suggest to stick with SLURM terminology and rename nthreads to nnodes. (Threads = Cores, i.e. shared memory ==> https://stackoverflow.com/a/65702566)
-  # >>> "nnodes = 1, # number of nodes to use in a HPC cluster setup (e.g. UBELIX) - xxx not yet implemented"
-  ncores_max = 6, # number of parallel jobs, set to 1 for un-parallel run
-  # >>> If we want to use SLURM terminology: https://hpc-unibe-ch.github.io/slurm/submission.html, ncores_max could be renamed)
-  # >>> "ncores_max = 1, # number of multiple CPU-cores used for shared-memory parallel programming (e.g. with models like OpenMP)"
+  nnodes = 1,   # distribute to multiple nodes in a HPC environment: nnodes=1 no distribution, otherwise nnodes number of nodes to use in a HPC cluster setup to use (e.g. UBELIX) - xxx not yet implemented"
+  ncores_max = 6, # number of multiple CPU-cores used per node for shared-memory parallel programming (e.g. with models like OpenMP)"
 
   ### final model output
   # dir_out = here::here("output/out_tidy/"),                # path for tidy model output
@@ -143,13 +139,13 @@ Plot a map.
 
 ``` r
 coast <- rnaturalearth::ne_coastline(
-  scale = 110, 
+  scale = 110,
   returnclass = "sf"
   )
 
 # January
-gg1 <- df |> 
-  filter(month == 1) |> 
+gg1 <- df |>
+  filter(month == 1) |>
   ggplot() +
   geom_raster(
     aes(x = lon, y = lat, fill = gpp),
@@ -175,8 +171,8 @@ gg1 <- df |>
   )
 
 # July
-gg2 <- df |> 
-  filter(month == 7) |> 
+gg2 <- df |>
+  filter(month == 7) |>
   ggplot() +
   geom_raster(
     aes(x = lon, y = lat, fill = gpp),
@@ -202,7 +198,7 @@ gg2 <- df |>
   )
 
 cowplot::plot_grid(
-  gg1, 
+  gg1,
   gg2,
   ncol = 1
 )

@@ -51,7 +51,7 @@ testthat::test_that("test grsofun_tidy()", {
     save = list(         # a named list where names correspond to variable names in rsofun output and the value is a string specifying the temporal resolution to which global output is to be aggregated.
       gpp = "mon"
     ),
-    nthreads = 1,   # distribute to multiple nodes for high performance computing - xxx not yet implemented -
+    nnodes = 1,   # distribute to multiple nodes for high performance computing - xxx not yet implemented -
     ncores_max = 12  # number of parallel jobs, set to 1 for un-parallel run
   )
 

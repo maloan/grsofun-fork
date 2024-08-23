@@ -7,7 +7,7 @@
 grsofun_run <- function(par, settings, list_of_LON_str){
   # list_of_LON_str = c("LON_+046.250", "LON_+046.750")
 
-  if (settings$nthreads == 1){
+  if (settings$nnodes == 1){
     if (settings$ncores_max == 1){
       # Do not parallelize
       # out <- dplyr::tibble(ilon = 292) |>
@@ -65,25 +65,25 @@ grsofun_run <- function(par, settings, list_of_LON_str){
     # Create chunks of longitude indices and send to separate threads
     # distribute to separate nodes (distributed to cores within node is done
     # inside functions)
-    stop("Option nthreads > 1 is currently not implemented.")
+    stop("Option nnodes > 1 is currently not implemented.")
     purrr::map(
-      seq(settings$nthreads),
-      ~grsofun_run_bychunk(., settings$nthreads, par, settings)
+      seq(settings$nnodes),
+      ~grsofun_run_bychunk(., settings$nnodes, par, settings)
     )
   }
 }
 
 ##' @export
-# grsofun_run_bychunk <- function(chunk, nthreads, par, settings){
+# grsofun_run_bychunk <- function(chunk, nnodes, par, settings){
 #
-#   stop("Option nthreads > 1 is currently not implemented.")
+#   stop("Option nnodes > 1 is currently not implemented.")
 #
 #   # XXX: make this a system call for running a script containing this code
 #
 #   # determine longitude indices to process
 #   list_of_LON_str <- map2tidy::get_index_by_chunk(
 #     chunk,                           # counter for chunks
-#     nthreads,                        # total number of chunks
+#     nnodes,                        # total number of chunks
 #     len_ilon                         # total number of longitude indices
 #   )
 #
