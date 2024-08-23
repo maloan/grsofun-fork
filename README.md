@@ -51,8 +51,8 @@ settings <- list(
   ),                      #   the temporal resolution to which global output is to be aggregated.
 
   ### intermediate model output
-  # dir_drivers = here::here("input/out_tidy/"),             # path where rsofun drivers are to be written
-  dir_out_drivers = "/data_2/scratch/fbernhard/grsofun-input-drivers/",  # If a path is provided rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run(). If dir_drivers is 'NA' driver object are not stored.
+  save_drivers = TRUE,   # whether rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run().
+  dir_out_drivers = "/data_2/scratch/fbernhard/grsofun-input-drivers/",  # If a path is provided rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run(). If dir_out_drivers is 'NA' driver object are not stored.
   overwrite_intermediate = FALSE,      # whether files with tidy forcing data and drivers are to be overwritten. If false, reads files if available instead of re-creating them.
 
   ### tidy model input config:
@@ -67,27 +67,27 @@ settings <- list(
   # TODO: ensure grid$... is enforced/asserted
 
   source_climate   = "watch-wfdei",  # a string specifying climate forcing dataset-specific variables
-  dir_climate      = "/data/archive/wfdei_weedon_2014/data", # path to where climate forcing data is located
-  # dir_climate_tidy = "/data/archive/wfdei_weedon_2014/data/out_tidy/",  # path to where tidy climate forcing data is to be written
-  dir_climate_tidy = "/data_2/scratch/fbernhard/wfdei_weedon_2014/data/out_tidy/",  # path to where tidy climate forcing data is to be written
+  dir_in_climate      = "/data/archive/wfdei_weedon_2014/data", # path to where climate forcing data is located
+  # dir_out_tidy_climate = "/data/archive/wfdei_weedon_2014/data/out_tidy/",  # path to where tidy climate forcing data is to be written
+  dir_out_tidy_climate = "/data_2/scratch/fbernhard/wfdei_weedon_2014/data/out_tidy/",  # path to where tidy climate forcing data is to be written
 
   source_fapar     = "modis",   # a string specifying fAPAR forcing dataset-specific variables
-  file_fapar       = "/data/scratch/bstocker/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",  # path to where fAPAR forcing data is located
-  # dir_fapar_tidy = "/data/scratch/bstocker/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/out_tidy/",   # path to where tidy fAPAR forcing data is to be written
-  dir_fapar_tidy   = "/data_2/scratch/fbernhard/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/data/out_tidy/",  # path to where tidy fAPAR forcing data is to be written
+  file_in_fapar       = "/data/scratch/bstocker/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",  # path to where fAPAR forcing data is located
+  # dir_out_tidy_fapar = "/data/scratch/bstocker/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/out_tidy/",   # path to where tidy fAPAR forcing data is to be written
+  dir_out_tidy_fapar   = "/data_2/scratch/fbernhard/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/data/out_tidy/",  # path to where tidy fAPAR forcing data is to be written
 
-  # file_whc      = "/data/archive/whc_stocker_2023/data/cwdx80_forcing.nc",
-  file_whc        = "/data/archive/whc_stocker_2023/data/remap/cwdx80_forcing_0.5degbil.nc",
-  # dir_whc_tidy  = "/data/archive/whc_stocker_2023/data/out_tidy_cwdx80_forcing/", # path to where tidy  root zone storage capacity forcing data is to be written
-  dir_whc_tidy    = "/data_2/scratch/fbernhard/whc_stocker_2023/data/out_tidy_cwdx80_forcing/", # path to where tidy  root zone storage capacity forcing data is to be written
+  # file_in_whc      = "/data/archive/whc_stocker_2023/data/cwdx80_forcing.nc",
+  file_in_whc        = "/data/archive/whc_stocker_2023/data/remap/cwdx80_forcing_0.5degbil.nc",
+  # dir_out_tidy_whc  = "/data/archive/whc_stocker_2023/data/out_tidy_cwdx80_forcing/", # path to where tidy  root zone storage capacity forcing data is to be written
+  dir_out_tidy_whc    = "/data_2/scratch/fbernhard/whc_stocker_2023/data/out_tidy_cwdx80_forcing/", # path to where tidy  root zone storage capacity forcing data is to be written
 
-  file_landmask       = "/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc",        # path to where land mask data is located
-  # dir_landmask_tidy = "/data/archive/wfdei_weedon_2014/data/out_tidy_WFDEI-elevation/", # path to where tidy land mask data is to be written
-  dir_landmask_tidy   = "/data_2/scratch/fbernhard/wfdei_weedon_2014/data/out_tidy_WFDEI-elevation/", # path to where tidy land mask data is to be written
+  file_in_landmask       = "/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc",        # path to where land mask data is located
+  # dir_out_tidy_landmask = "/data/archive/wfdei_weedon_2014/data/out_tidy_WFDEI-elevation/", # path to where tidy land mask data is to be written
+  dir_out_tidy_landmask   = "/data_2/scratch/fbernhard/wfdei_weedon_2014/data/out_tidy_WFDEI-elevation/", # path to where tidy land mask data is to be written
 
-  file_elv            = "/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc",        # path to where elevation data is located
-  # dir_elv_tidy      = "/data/archive/wfdei_weedon_2014/data/out_tidy_WFDEI-elevation/", # path to where tidy elevation data is to be written
-  dir_elv_tidy        = "/data_2/scratch/fbernhard/wfdei_weedon_2014/data/out_tidy_WFDEI-elevation/" # path to where tidy elevation data is to be written
+  file_in_elv            = "/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc",        # path to where elevation data is located
+  # dir_out_tidy_elv      = "/data/archive/wfdei_weedon_2014/data/out_tidy_WFDEI-elevation/", # path to where tidy elevation data is to be written
+  dir_out_tidy_elv        = "/data_2/scratch/fbernhard/wfdei_weedon_2014/data/out_tidy_WFDEI-elevation/" # path to where tidy elevation data is to be written
 )
 ```
 

@@ -134,25 +134,25 @@ grsofun_run_byLON <- function(LON_string, par, settings){
   #            use (lon = 13.75, lat = 50.75, sitename = grid_LON_+013.750_LAT_+050.750)
 
   if (settings$save_drivers){
-    dir.create(settings$dir_drivers, recursive = TRUE, showWarnings = FALSE) # TODO: make this emit a message
-    filnam_drivers <- file.path(settings$dir_drivers, paste0(settings$fileprefix, "_", LON_string, ".rds"))
+    dir.create(settings$dir_out_drivers, recursive = TRUE, showWarnings = FALSE) # TODO: make this emit a message
+    filnam_drivers <- file.path(settings$dir_out_drivers, paste0(settings$fileprefix, "_", LON_string, ".rds"))
   }
 
   if (settings$overwrite_intermediate || !file.exists(filnam_drivers)){
 
     # get land mask - variable name hard coded
-    df <- readr::read_rds(paste0(settings$dir_landmask_tidy, "WFDEI-elevation_", LON_string, ".rds")) |>
+    df <- readr::read_rds(paste0(settings$dir_out_tidy_landmask, "WFDEI-elevation_", LON_string, ".rds")) |>
       dplyr::rename(elv = elevation)
 
     # # get elevation
     # dplyr::left_join(
-    #   readr::read_rds(paste0(settings$dir_elv_tidy, "ETOPO1_Bed_g_geotiff_halfdeg_ilon_", ilon, ".rds")) |>
+    #   readr::read_rds(paste0(settings$dir_out_tidy_elv, "ETOPO1_Bed_g_geotiff_halfdeg_ilon_", ilon, ".rds")) |>
     #     dplyr::rename(elv = ETOPO1_Bed_g_geotiff),
     #   dplyr::join_by(lon, lat)
     # ) |>
 
     # get rooting zone water storage capacity information. If missing, assume 200 mm.
-    df_whc <- readr::read_rds(paste0(settings$dir_whc_tidy, "cwdx80_forcing_halfdeg_", LON_string, ".rds"))
+    df_whc <- readr::read_rds(paste0(settings$dir_out_tidy_whc, "cwdx80_forcing_halfdeg_", LON_string, ".rds"))
     if (nrow(df_whc) > 0){
       df <- df |>
         dplyr::left_join(
@@ -248,7 +248,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
     if (settings$source_fapar == "modis"){
 
       # read monthly fAPAR data
-      df_fapar_mon <- readr::read_rds(paste0(settings$dir_fapar_tidy, "MODIS-C006_MOD15A2_LAI_FPAR_zmaw_", LON_string, ".rds"))
+      df_fapar_mon <- readr::read_rds(paste0(settings$dir_out_tidy_fapar, "MODIS-C006_MOD15A2_LAI_FPAR_zmaw_", LON_string, ".rds"))
 
       # check if something was read
       if ("data.frame" %in% class(df_fapar_mon)){
@@ -542,7 +542,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
 read_forcing_byvar_byLON <- function(var, LON_string, settings){
 
   if (settings$source_climate == "watch-wfdei"){
-    df <- readr::read_rds(paste0(settings$dir_climate_tidy, var, "_daily_WFDEI_", LON_string, ".rds")) |>
+    df <- readr::read_rds(paste0(settings$dir_out_tidy_climate, var, "_daily_WFDEI_", LON_string, ".rds")) |>
     tidyr::unnest(data)
   }
 

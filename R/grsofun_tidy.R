@@ -20,12 +20,12 @@ grsofun_tidy <- function(settings, ...){
   }
   list_writable_directories <- lapply(
     settings[c(# outfiles of grsofun_tidy()
-               "dir_landmask_tidy",
-               "dir_whc_tidy",
-               "dir_fapar_tidy",
-               "dir_climate_tidy",
+               "dir_out_tidy_landmask",
+               "dir_out_tidy_whc",
+               "dir_out_tidy_fapar",
+               "dir_out_tidy_climate",
                # outfiles of grsofun_run()
-               "dir_drivers",
+               "dir_out_drivers",
                "dir_out"
                # outfiles of grsofun_collect()
                # "dir_out_nc"
@@ -42,62 +42,62 @@ grsofun_tidy <- function(settings, ...){
 
 
   # land mask and elevation in one
-  res_landmask <- if (!is.na(settings$file_landmask) && file.exists(settings$file_landmask)) {
+  res_landmask <- if (!is.na(settings$file_in_landmask) && file.exists(settings$file_in_landmask)) {
     map2tidy::map2tidy(
-      nclist = settings$file_landmask,
+      nclist = settings$file_in_landmask,
       varnam = "elevation",
       lonnam = "lon",
       latnam = "lat",
       do_chunks = TRUE,
-      outdir = settings$dir_landmask_tidy,
+      outdir = settings$dir_out_tidy_landmask,
       fileprefix = "WFDEI-elevation",
       overwrite = settings$overwrite_intermediate,
       ncores     = settings$ncores_max,  # parallel::detectCores()
       ...
     )
   } else {
-    data.frame(input_path = settings$file_landmask, msg = "No landmask file found.")
+    data.frame(input_path = settings$file_in_landmask, msg = "No landmask file found.")
   }
 
   # root zone total whc
-  res_whc <- if (!is.na(settings$file_whc) && file.exists(settings$file_whc)) {
+  res_whc <- if (!is.na(settings$file_in_whc) && file.exists(settings$file_in_whc)) {
     map2tidy::map2tidy(
-      nclist = settings$file_whc,
+      nclist = settings$file_in_whc,
       varnam = "cwdx80_forcing",
       lonnam = "lon",
       latnam = "lat",
       do_chunks = TRUE,
-      outdir = settings$dir_whc_tidy,
+      outdir = settings$dir_out_tidy_whc,
       fileprefix = "cwdx80_forcing_halfdeg",
       overwrite = settings$overwrite_intermediate,
       ncores     = settings$ncores_max,  # parallel::detectCores()
       ...
     )
   } else {
-    data.frame(input_path = settings$file_whc, msg = "No whc file found.")
+    data.frame(input_path = settings$file_in_whc, msg = "No whc file found.")
   }
 
   # elevation
-  res_elv <- if (!is.na(settings$file_elv) && file.exists(settings$file_elv)) {
+  res_elv <- if (!is.na(settings$file_in_elv) && file.exists(settings$file_in_elv)) {
     map2tidy::map2tidy(
-      nclist = settings$file_elv,
+      nclist = settings$file_in_elv,
       varnam = "elevation", # varnam = "ETOPO1_Bed_g_geotiff",
       lonnam = "lon",
       latnam = "lat",
       do_chunks = TRUE,
-      outdir = settings$dir_elv_tidy,
+      outdir = settings$dir_out_tidy_elv,
       fileprefix = "WFDEI-elevation", # fileprefix = "ETOPO1_Bed_g_geotiff_halfdeg",
       overwrite = settings$overwrite_intermediate,
       ncores    = settings$ncores_max,  # parallel::detectCores()
       ...
     )
   } else {
-    data.frame(input_path = settings$file_elv, msg = "No elv file found.")
+    data.frame(input_path = settings$file_in_elv, msg = "No elv file found.")
   }
 
   # climate
   res_climate_df <-
-    if (!is.na(settings$dir_climate) && file.exists(settings$dir_climate)) {
+    if (!is.na(settings$dir_in_climate) && file.exists(settings$dir_in_climate)) {
 
       # HARDCODED CODE FOR DIFFERENT CLIMATE INPUT FILES:
       if (settings$source_climate == "watch-wfdei"){
@@ -139,7 +139,7 @@ grsofun_tidy <- function(settings, ...){
         vars,
         function(var) map2tidy::map2tidy(
           nclist  = list.files(
-            file.path(settings$dir_climate, gsub("\\[VAR\\]",var,source_subdirectory)),
+            file.path(settings$dir_in_climate, gsub("\\[VAR\\]",var,source_subdirectory)),
             pattern = source_pattern,
             full.names = TRUE),
           varnam  = var,
@@ -147,7 +147,7 @@ grsofun_tidy <- function(settings, ...){
           latnam  = grid_climate_names$latnam,
           timenam = grid_climate_names$timenam,
           do_chunks  = TRUE,
-          outdir     = settings$dir_climate_tidy,
+          outdir     = settings$dir_out_tidy_climate,
           fileprefix = paste0(var, outfile_suffix),
           overwrite  = settings$overwrite_intermediate,
           fgetdate   = ifelse(is.function(fgetdate_function), fgetdate_function, NA),
@@ -159,22 +159,22 @@ grsofun_tidy <- function(settings, ...){
       dplyr::bind_rows(res_climate_list)
 
     } else {
-      data.frame(input_path = settings$file_whc, msg = "No climate file found.")
+      data.frame(input_path = settings$file_in_whc, msg = "No climate file found.")
     }
 
   # fapar
   res_fapar <-
-    if (!is.na(settings$file_fapar) && file.exists(settings$file_fapar)) {
+    if (!is.na(settings$file_in_fapar) && file.exists(settings$file_in_fapar)) {
       # HARDCODED CODE FOR DIFFERENT FAPAR INPUT FILES:
       if (settings$source_fapar == "modis"){
         map2tidy::map2tidy(
-          nclist = settings$file_fapar,
+          nclist = settings$file_in_fapar,
           varnam = "fpar",
           lonnam = "lon",
           latnam = "lat",
           timenam = "time",
           do_chunks = TRUE,
-          outdir = settings$dir_fapar_tidy,
+          outdir = settings$dir_out_tidy_fapar,
           fileprefix = "MODIS-C006_MOD15A2_LAI_FPAR_zmaw",
           overwrite = settings$overwrite_intermediate,
           # filter_lon_between_degrees = c(-1,1), # TODO: only for development
@@ -189,7 +189,7 @@ grsofun_tidy <- function(settings, ...){
         Your input to 'settings$source_fapar' does not (yet) appear to be supported.")
       }
     } else {
-      data.frame(input_path = settings$file_whc, msg = "No fapar file found.")
+      data.frame(input_path = settings$file_in_whc, msg = "No fapar file found.")
     }
 
   return(list(

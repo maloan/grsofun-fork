@@ -22,22 +22,22 @@ testthat::test_that("test grsofun_tidy()", {
       len_ilat = 360
     ),
     #------------------------------------------------ -
-    dir_climate      = NA,#"~/data/archive/wfdei_weedon_2014/data", # path to where climate forcing data is located
-    dir_climate_tidy = file.path(tmpdir, "tidy_climate"),                         # path to where tidy climate forcing data is to be written
+    dir_in_climate      = NA,#"~/data/archive/wfdei_weedon_2014/data", # path to where climate forcing data is located
+    dir_out_tidy_climate = file.path(tmpdir, "tidy_climate"),                         # path to where tidy climate forcing data is to be written
     source_climate   = "watch-wfdei",  # a string specifying climate forcing dataset-specific variables
 
-    file_fapar     = NA,#"~/data/scratch/bstocker/data/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",  # path to where fAPAR forcing data is located
-    dir_fapar_tidy = file.path(tmpdir, "tidy_fapar"),                             # path to where tidy fAPAR forcing data is to be written
+    file_in_fapar     = NA,#"~/data/scratch/bstocker/data/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",  # path to where fAPAR forcing data is located
+    dir_out_tidy_fapar = file.path(tmpdir, "tidy_fapar"),                             # path to where tidy fAPAR forcing data is to be written
     source_fapar   = "modis",   # a string specifying fAPAR forcing dataset-specific variables
 
-    file_whc      = NA,#"~/data/archive/whc_stocker_2023/data/cwdx80_forcing.nc", # get from zenodo: https://doi.org/10.5281/zenodo.10885724 and add to archive
-    dir_whc_tidy  = file.path(tmpdir, "tidy_whc"),                                # path to where tidy  root zone storage capacity forcing data is to be written
+    file_in_whc      = NA,#"~/data/archive/whc_stocker_2023/data/cwdx80_forcing.nc", # get from zenodo: https://doi.org/10.5281/zenodo.10885724 and add to archive
+    dir_out_tidy_whc  = file.path(tmpdir, "tidy_whc"),                                # path to where tidy  root zone storage capacity forcing data is to be written
 
-    file_landmask     = NA,#"~/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc",      # path to where land mask data is located
-    dir_landmask_tidy = file.path(tmpdir, "tidy_landmask"),                       # path to where tidy land mask data is to be written
+    file_in_landmask     = NA,#"~/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc",      # path to where land mask data is located
+    dir_out_tidy_landmask = file.path(tmpdir, "tidy_landmask"),                       # path to where tidy land mask data is to be written
 
-    file_elv          = NA,#"~/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc",      # path to where elevation data is located
-    dir_elv_tidy      = file.path(tmpdir, "tidy_elv"),                            # path to where tidy elevation data is to be written
+    file_in_elv          = NA,#"~/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc",      # path to where elevation data is located
+    dir_out_tidy_elv      = file.path(tmpdir, "tidy_elv"),                            # path to where tidy elevation data is to be written
     #------------------------------------------------ -
     save_drivers = TRUE,  # whether rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run().
     # dir_drivers = here::here("input/out_tidy/"),             # path where rsofun drivers are to be written
@@ -67,22 +67,22 @@ testthat::test_that("test grsofun_tidy()", {
          res_fapar        = data.frame(input_path = NA, msg = "No fapar file found.")))
 
   # Test subset of certain longitudes: (only test landmask and , keep others at NA)
-  settings$file_landmask <- WFDEI_elev_path#"~/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc"
-  settings$file_elv      <- WFDEI_elev_path#"~/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc"
+  settings$file_in_landmask <- WFDEI_elev_path#"~/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc"
+  settings$file_in_elv      <- WFDEI_elev_path#"~/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc"
   out_tidy_02 <- grsofun_tidy(settings,
                               filter_lon_between_degrees = c(-21, -17.5))
 
   testthat::expect_equal(nrow(bind_rows(out_tidy_02)), 17)
 
   testthat::expect_identical(
-    list.files(settings$dir_landmask_tidy),
+    list.files(settings$dir_out_tidy_landmask),
     c(
       "WFDEI-elevation_LON_-017.750.rds", "WFDEI-elevation_LON_-018.250.rds",
       "WFDEI-elevation_LON_-018.750.rds", "WFDEI-elevation_LON_-019.250.rds",
       "WFDEI-elevation_LON_-019.750.rds", "WFDEI-elevation_LON_-020.250.rds",
       "WFDEI-elevation_LON_-020.750.rds"))
 
-  fresh_file <- readRDS(file.path(settings$dir_landmask_tidy,"WFDEI-elevation_LON_-017.750.rds"))
+  fresh_file <- readRDS(file.path(settings$dir_out_tidy_landmask,"WFDEI-elevation_LON_-017.750.rds"))
   testthat::expect_equal(
     fresh_file[c(1,5,25,53),],
     dplyr::tibble(lon       = c(-17.75, -17.75, -17.75, -17.75),
@@ -92,7 +92,7 @@ testthat::test_that("test grsofun_tidy()", {
 
 
   # Test also some climate files
-  settings$dir_climate <- WFDEI_clim_path#"~/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc"
+  settings$dir_in_climate <- WFDEI_clim_path#"~/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc"
   out_tidy_03 <- grsofun_tidy(settings,
                               filter_lon_between_degrees = c(-21, -17.5))
 
@@ -104,7 +104,7 @@ testthat::test_that("test grsofun_tidy()", {
   testthat::expect_equal(nrow(out_tidy_03$res_whc), 1)
   testthat::expect_equal(nrow(out_tidy_03$res_fapar), 1)
   testthat::expect_identical(
-    list.files(settings$dir_climate_tidy),
+    list.files(settings$dir_out_tidy_climate),
     c("PSurf_daily_WFDEI_LON_-017.750.rds", "PSurf_daily_WFDEI_LON_-018.250.rds", "PSurf_daily_WFDEI_LON_-018.750.rds", "PSurf_daily_WFDEI_LON_-019.250.rds",
       "PSurf_daily_WFDEI_LON_-019.750.rds", "PSurf_daily_WFDEI_LON_-020.250.rds", "PSurf_daily_WFDEI_LON_-020.750.rds",
       "Qair_daily_WFDEI_LON_-017.750.rds", "Qair_daily_WFDEI_LON_-018.250.rds", "Qair_daily_WFDEI_LON_-018.750.rds", "Qair_daily_WFDEI_LON_-019.250.rds",
