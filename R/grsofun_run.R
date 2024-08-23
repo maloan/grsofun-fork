@@ -15,11 +15,11 @@ grsofun_run <- function(par, settings, list_of_LON_str){
           dplyr::mutate(out = purrr::map(
             LON_str,
             ~grsofun_run_byLON(
-            .,
-            par,
-            settings
-          ))
-        )
+              .,
+              par,
+              settings
+            ))
+          )
 
     } else {
       # Parallelise by longitudinal bands on multiple cores of a single node
@@ -490,7 +490,11 @@ grsofun_run_byLON <- function(LON_string, par, settings){
 
   # run model
   out <- rsofun::runread_pmodel_f(
-    drivers = df,
+    # drivers = df,
+    # Remove a day in the leap years...     # TODO: is this really needed for rsofun?
+    drivers = mutate(df,
+                     forcing = purrr::map(forcing,
+                                          ~dplyr::filter(., !(format(date, "%m-%d") == "02-29")))),
     par = par
   )
 
