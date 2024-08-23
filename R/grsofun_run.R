@@ -7,6 +7,13 @@
 grsofun_run <- function(par, settings, list_of_LON_str){
   # list_of_LON_str = c("LON_+046.250", "LON_+046.750")
 
+
+  # Create necessary output directories
+  dir.create(settings$dir_out,         recursive = TRUE, showWarnings = FALSE)
+  if (!is.na(settings$dir_out_drivers)){
+    dir.create(settings$dir_out_drivers, recursive = TRUE, showWarnings = FALSE)
+  }
+
   if (settings$nnodes == 1){
     if (settings$ncores_max == 1){
       # Do not parallelize
