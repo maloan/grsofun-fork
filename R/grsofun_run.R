@@ -1,21 +1,20 @@
 #' @param par ...
 #' @param settings ...
-#' @param vec_index Longitude indices to process
+#' @param list_of_LON_str Longitude indices to process as a vector of strings,
+#'                        e.g. c("LON_+046.250", "LON_+046.750")
+#'
 #' @export
-grsofun_run <- function(par, settings, vec_index = NULL){
+grsofun_run <- function(par, settings, list_of_LON_str){
+  # list_of_LON_str = c("LON_+046.250", "LON_+046.750")
 
   if (settings$nthreads == 1){
-    len_ilon <- settings$grid$len_ilon
-    vec_index = if(is.null(vec_index)){seq(len_ilon)} else {vec_index}
-    message(paste0(vec_index, collapse=","))
-
     if (settings$ncores_max == 1){
       # Do not parallelize
       # out <- dplyr::tibble(ilon = 292) |>
-      out <- dplyr::tibble(ilon = vec_index) |>
+      out <- dplyr::tibble(LON_str = list_of_LON_str) |>
           dplyr::mutate(out = purrr::map(
-          ilon,
-          ~grsofun_run_byilon(
+            LON_str,
+            ~grsofun_run_byLON(
             .,
             par,
             settings
@@ -40,20 +39,20 @@ grsofun_run <- function(par, settings, vec_index = NULL){
                                       "purrr",
                                       "tidyr",
                                       "readr",
-                                      "grsofun",
+                                      "grsofun"
         )) |>
         multidplyr::cluster_assign(
-          grsofun_run_byilon = grsofun_run_byilon,   # make the function known for each core
-          read_forcing_byvar_byilon = read_forcing_byvar_byilon
+          grsofun_run_byLON = grsofun_run_byLON,   # make the function known for each core
+          read_forcing_byvar_byLON = read_forcing_byvar_byLON
         )
 
       # distribute computation across the cores, calculating for all longitudinal
       # indices of this chunk
-      out <- dplyr::tibble(ilon = vec_index) |>
+      out <- dplyr::tibble(LON_str = list_of_LON_str) |>
         multidplyr::partition(cl) |>
         dplyr::mutate(out = purrr::map(
-          ilon,
-          ~grsofun_run_byilon(
+          LON_str,
+          ~grsofun_run_byLON(
             .,
             par,
             settings
@@ -82,8 +81,7 @@ grsofun_run <- function(par, settings, vec_index = NULL){
 #   # XXX: make this a system call for running a script containing this code
 #
 #   # determine longitude indices to process
-#   len_ilon <- settings$grid_climate$len_ilon
-#   vec_index <- map2tidy::get_index_by_chunk(
+#   list_of_LON_str <- map2tidy::get_index_by_chunk(
 #     chunk,                           # counter for chunks
 #     nthreads,                        # total number of chunks
 #     len_ilon                         # total number of longitude indices
@@ -109,17 +107,17 @@ grsofun_run <- function(par, settings, vec_index = NULL){
 #                                   "grsofun",
 #                                   )) |>
 #     multidplyr::cluster_assign(
-#       grsofun_run_byilon = grsofun_run_byilon,   # make the function known for each core
-#       read_forcing_byvar_byilon = read_forcing_byvar_byilon
+#       grsofun_run_byLON = grsofun_run_byLON,   # make the function known for each core
+#       read_forcing_byvar_byLON = read_forcing_byvar_byLON
 #     )
 #
 #   # distribute computation across the cores, calculating for all longitudinal
 #   # indices of this chunk
-#   out <- dplyr::tibble(ilon = vec_index) |>
+#   out <- dplyr::tibble(ilon = list_of_LON_str) |>
 #     multidplyr::partition(cl) |>
 #     dplyr::mutate(out = purrr::map(
 #       ilon,
-#       ~grsofun_run_byilon(
+#       ~grsofun_run_byLON(
 #         .,
 #         par,
 #         settings
@@ -129,20 +127,20 @@ grsofun_run <- function(par, settings, vec_index = NULL){
 # }
 
 #' @export
-grsofun_run_byilon <- function(ilon, par, settings){
+grsofun_run_byLON <- function(LON_string, par, settings){
+  # e.g LON_string = "LON_+046.750"
 
-  # xxx test: ilon = 388
   # for DE-Tha (DE-Tha  lon = 13.6, lat = 51.0, elv = 380 m), use ilon = 388 (lon = 13.75, lat = 50.75, sitename = grid_ilon_388_ilat_174)
 
   if (settings$save_drivers){
     dir.create(settings$dir_drivers, recursive = TRUE, showWarnings = FALSE) # TODO: make this emit a message
-    filnam_drivers <- paste0(settings$dir_drivers, "/", settings$fileprefix, "_ilon_", ilon, ".rds")
+    filnam_drivers <- file.path(settings$dir_drivers, paste0(settings$fileprefix, "_", LON_string, ".rds"))
   }
 
   if (settings$overwrite || !file.exists(filnam_drivers)){
 
     # get land mask - variable name hard coded
-    df <- readr::read_rds(paste0(settings$dir_landmask_tidy, "WFDEI-elevation_ilon_", ilon, ".rds")) |>
+    df <- readr::read_rds(paste0(settings$dir_landmask_tidy, "WFDEI-elevation_", LON_string, ".rds")) |>
       dplyr::rename(elv = elevation)
 
     # # get elevation
@@ -153,7 +151,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
     # ) |>
 
     # get rooting zone water storage capacity information. If missing, assume 200 mm.
-    df_whc <- readr::read_rds(paste0(settings$dir_whc_tidy, "cwdx80_forcing_halfdeg_ilon_", ilon, ".rds"))
+    df_whc <- readr::read_rds(paste0(settings$dir_whc_tidy, "cwdx80_forcing_halfdeg_", LON_string, ".rds"))
     if (nrow(df_whc) > 0){
       df <- df |>
         dplyr::left_join(
@@ -165,6 +163,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
       df <- df |>
         dplyr::mutate(whc = 200)
     }
+
     df <- df |>
       dplyr::mutate(whc = ifelse(is.na(whc), 200, whc))
 
@@ -178,11 +177,11 @@ grsofun_run_byilon <- function(ilon, par, settings){
       kfFEC <- 2.04
       df_climate <- purrr::map(
         vars,
-        ~read_forcing_byvar_byilon(., ilon, settings)
+        ~read_forcing_byvar_byLON(., LON_string, settings)
       ) |>
         purrr::reduce(
           dplyr::left_join,
-          dplyr::join_by(lon, lat, time)
+          dplyr::join_by(lon, lat, datetime)
         ) |>
 
         # convert units and rename
@@ -210,7 +209,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
         dplyr::select(
           lon,
           lat,
-          date = time,
+          date = datetime, # map2tidy outputs 'datetime', but pmodel requires 'date'
           temp = Tair,
           rain = Rainf,
           vpd,
@@ -226,6 +225,10 @@ grsofun_run_byilon <- function(ilon, par, settings){
 
         dplyr::group_by(lon, lat) |>
         tidyr::nest()
+
+      df_climate <- df_climate |>
+        # parse datetimes from string (output of map2tidy) to datetimes
+        dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = lubridate::ymd(date))))
 
       # # xxx test
       # df_climate |>
@@ -244,7 +247,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
     if (settings$source_fapar == "modis"){
 
       # read monthly fAPAR data
-      df_fapar_mon <- readr::read_rds(paste0(settings$dir_fapar_tidy, "MODIS-C006_MOD15A2_LAI_FPAR_zmaw_ilon_", ilon, ".rds"))
+      df_fapar_mon <- readr::read_rds(paste0(settings$dir_fapar_tidy, "MODIS-C006_MOD15A2_LAI_FPAR_zmaw_", LON_string, ".rds"))
 
       # check if something was read
       if ("data.frame" %in% class(df_fapar_mon)){
@@ -254,12 +257,14 @@ grsofun_run_byilon <- function(ilon, par, settings){
       }
 
       if (avl_fapar){
-
         df_fapar_mon <- df_fapar_mon |>
-          dplyr::mutate(data = purrr::map(data, ~dplyr::rename(., date = time)))
+          # map2tidy outputs 'datetime', but pmodel requires 'date'
+          dplyr::mutate(data = purrr::map(data, ~dplyr::rename(., date = datetime))) |>
+          # parse datetimes from string (output of map2tidy) to datetimes
+          dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = lubridate::ymd(date))))
 
         # # xxx problem: no decembers are read after 2014
-        # df_fapar_mon |>
+        # df_fapar_mon |> slice(1) |>
         #   unnest(data) |>
         #   select(date) |>
         #   distinct() |>
@@ -374,7 +379,7 @@ grsofun_run_byilon <- function(ilon, par, settings){
         # create simulation parameters (common for all)
         # construct site name from longitude and latitude indices
         dplyr::mutate(
-          sitename = paste0("grid_ilon_", ilon, "_ilat_", ilat),
+          sitename = paste0("grid_", LON_string, "_ilat_", ilat), # TODO change this to LAT_string
           spinup = TRUE,
           spinupyears = settings$spinupyears,
           recycle = settings$recycle,
@@ -519,17 +524,17 @@ grsofun_run_byilon <- function(ilon, par, settings){
 
   dir.create(settings$dir_out,     recursive = TRUE, showWarnings = FALSE)  # TODO: make this emit a message
 
-  outpath <- paste0(settings$dir_out, settings$fileprefix, "_ilon_", ilon, ".rds")
+  outpath <- paste0(settings$dir_out, settings$fileprefix, "_", LON_string, ".rds")
   message(paste("Writing file", outpath, "..."))
   readr::write_rds(out, file = outpath)
 
 }
 
 #' @export
-read_forcing_byvar_byilon <- function(var, ilon, settings){
+read_forcing_byvar_byLON <- function(var, LON_string, settings){
 
   if (settings$source_climate == "watch-wfdei"){
-    df <- readr::read_rds(paste0(settings$dir_climate_tidy, var, "_daily_WFDEI_ilon_", ilon, ".rds")) |>
+    df <- readr::read_rds(paste0(settings$dir_climate_tidy, var, "_daily_WFDEI_", LON_string, ".rds")) |>
     tidyr::unnest(data)
   }
 
