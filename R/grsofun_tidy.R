@@ -12,6 +12,35 @@
 
 grsofun_tidy <- function(settings, ...){
 
+  # check beforehand if all outdirs are writable:
+  is_writable <- function(path){file.access(path, mode = 2) == 0}
+  assert_writable <- function(path){
+    is_writable(path) ||
+      stop(sprintf("Path %s is not writable. Please correct!", path))
+  }
+  list_writable_directories <- lapply(
+    settings[c(# outfiles of grsofun_tidy()
+               "dir_landmask_tidy",
+               "dir_whc_tidy",
+               "dir_fapar_tidy",
+               "dir_climate_tidy",
+               # outfiles of grsofun_run()
+               "dir_drivers",
+               "dir_out"
+               # outfiles of grsofun_collect()
+               # "dir_out_nc"
+               )],
+    assert_writable)
+  if(suppressWarnings(!all(list_writable_directories))){stop(
+    "Not all out directories are writable. Make sure you have the permissions for:",
+    "\n",
+    paste(capture.output(print(settings[
+      names(list_writable_directories[!unlist(list_writable_directories)])
+    ])), collapse = "\n")
+  )}
+
+
+
   # land mask and elevation in one
   res_landmask <- if (!is.na(settings$file_landmask) && file.exists(settings$file_landmask)) {
     map2tidy::map2tidy(
