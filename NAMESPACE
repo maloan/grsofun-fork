@@ -2,8 +2,8 @@
 
 export(grsofun)
 export(grsofun_collect)
-export(grsofun_collect_byilon)
+export(grsofun_collect_byLON)
 export(grsofun_run)
-export(grsofun_run_byilon)
+export(grsofun_run_byLON)
 export(grsofun_tidy)
-export(read_forcing_byvar_byilon)
+export(read_forcing_byvar_byLON)
