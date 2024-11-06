@@ -161,7 +161,10 @@ grsofun_run_byLON <- function(LON_string, par, settings){
     # ) |>
 
     # get rooting zone water storage capacity information. If missing, assume 200 mm.
-    df_whc <- readr::read_rds(paste0(settings$dir_out_tidy_whc, "cwdx80_forcing_halfdeg_", LON_string, ".rds"))
+    df_whc <- readr::read_rds(
+      paste0(settings$dir_out_tidy_whc,
+             gsub(".nc","",basename(settings$file_in_whc)),
+             "_", LON_string, ".rds"))
     if (nrow(df_whc) > 0){
       df <- df |>
         dplyr::left_join(

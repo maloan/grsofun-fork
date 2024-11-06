@@ -71,7 +71,7 @@ grsofun_tidy <- function(settings, ...){
       latnam = "lat",
       do_chunks = TRUE,
       outdir = settings$dir_out_tidy_whc,
-      fileprefix = "cwdx80_forcing_halfdeg",
+      fileprefix = gsub(".nc","",basename(settings$file_in_whc)),#"cwdx80_forcing_halfdeg",
       overwrite = settings$overwrite_intermediate,
       ncores     = settings$ncores_max,  # parallel::detectCores()
       ...
