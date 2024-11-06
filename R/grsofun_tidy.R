@@ -162,7 +162,7 @@ grsofun_tidy <- function(settings, ...){
       dplyr::bind_rows(res_climate_list)
 
     } else {
-      data.frame(input_path = settings$file_in_whc, msg = "No climate file found.")
+      data.frame(input_path = settings$dir_in_climate, msg = "No climate file found.")
     }
 
   # fapar
@@ -192,7 +192,7 @@ grsofun_tidy <- function(settings, ...){
         Your input to 'settings$source_fapar' does not (yet) appear to be supported.")
       }
     } else {
-      data.frame(input_path = settings$file_in_whc, msg = "No fapar file found.")
+      data.frame(input_path = settings$file_in_fapar, msg = "No fapar file found.")
     }
 
   return(list(
