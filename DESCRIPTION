@@ -1,6 +1,6 @@
 Package: grsofun
 Title: Global rsofun
-Version: 0.2
+Version: 0.2.9000
 Authors@R: c(
     person(
       given = "Benjamin",
@@ -27,7 +27,7 @@ Imports:
     purrr,
     multidplyr,
     parallel,
-    map2tidy (>= 2.1.0),
+    map2tidy (>= 2.1.2),
     rsofun,
     rgeco
 Suggests:

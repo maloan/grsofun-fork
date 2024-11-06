@@ -103,6 +103,7 @@ grsofun_tidy <- function(settings, ...){
     if (!is.na(settings$dir_in_climate) && file.exists(settings$dir_in_climate)) {
 
       # HARDCODED CODE FOR DIFFERENT CLIMATE INPUT FILES:
+      # Create 'res_climate':
       if (settings$source_climate == "watch-wfdei"){
 
         # data-product specific variable names
@@ -127,6 +128,56 @@ grsofun_tidy <- function(settings, ...){
                    as.character())
         }
 
+        # make files tidy for each variable
+        res_climate_list <- purrr::map(
+          vars,
+          function(var) map2tidy::map2tidy(
+            nclist  = list.files(
+              file.path(settings$dir_in_climate, gsub("\\[VAR\\]",var,source_subdirectory)),
+              pattern = source_pattern,
+              full.names = TRUE),
+            varnam  = var,
+            lonnam  = grid_climate_names$lonnam,
+            latnam  = grid_climate_names$latnam,
+            timenam = grid_climate_names$timenam,
+            do_chunks  = TRUE,
+            outdir     = settings$dir_out_tidy_climate,
+            fileprefix = paste0(var, outfile_suffix),
+            overwrite  = settings$overwrite_intermediate,
+            fgetdate   = ifelse(is.function(fgetdate_function), fgetdate_function, NA),
+            # filter_lon_between_degrees = c(-1, 1), # TODO: only for development
+            ncores     = settings$ncores_max,  # parallel::detectCores()
+            ...)
+        )
+        res_climate <- dplyr::bind_rows(res_climate_list)
+
+      } else if(settings$source_climate == "ERA5Land.tp_ssrd_d2m_t2m_sp_u10_v10") {
+        # fore ERA5Land.tp_ssrd_d2m_t2m_sp_u10_v10: make single tidy file containing all variables
+        list_climate_files <- list.files(
+          settings$dir_in_climate,
+          recursive = TRUE,
+          pattern = "ERA5Land.tp_ssrd_d2m_t2m_sp_u10_v10.[0-9]{4}.[0-9]{2}.nc",
+          full.names = TRUE)
+        stopifnot(length(list_climate_files) > 0)
+        res_climate <- map2tidy::map2tidy(
+          nclist     = list_climate_files,
+          varnam     = c("tp","ssrd","d2m","t2m","sp","u10","v10"),
+          lonnam     = "longitude",
+          latnam     = "latitude",
+          timenam    = "valid_time",
+          do_chunks  = TRUE,
+          outdir     = settings$dir_out_tidy_climate,
+          fileprefix = "ERA5Land_hourly.tp_ssrd_d2m_t2m_sp_u10_v10",
+          overwrite  = settings$overwrite_intermediate,
+          fgetdate   = NA,
+          # filter_lon_between_degrees = c(1.0, 1.1)#, # TODO: only for development
+          ncores     = settings$ncores_max,  # parallel::detectCores()
+          ...)
+        # # check:
+        # readRDS(file.path(
+        # "/data_2/scratch/era5land_munoz-sabater_2021/data",
+        # "out_tidy/ERA5Land_hourly.tp_ssrd_d2m_t2m_sp_u10_v10_LON_+001.100.rds")) |>
+        #   dplyr::slice(1) |> tidyr::unnest(data)
       } else if(settings$source_climate == "some-other-climate-source-to-be-defined") {
         # NOTE: add future sources here
         # define: vars, outfile_suffix, source_subdirectory, source_pattern, fgetdate_function
@@ -135,32 +186,8 @@ grsofun_tidy <- function(settings, ...){
           Climate input need case-by-case modification of the code in grsofun.
           Your input to 'settings$source_climate' does not (yet) appear to be supported.")
       }
-      stopifnot(is.function(fgetdate_function) || is.na(fgetdate_function))
 
-      # make files tidy for each variable
-      res_climate_list <- purrr::map(
-        vars,
-        function(var) map2tidy::map2tidy(
-          nclist  = list.files(
-            file.path(settings$dir_in_climate, gsub("\\[VAR\\]",var,source_subdirectory)),
-            pattern = source_pattern,
-            full.names = TRUE),
-          varnam  = var,
-          lonnam  = grid_climate_names$lonnam,
-          latnam  = grid_climate_names$latnam,
-          timenam = grid_climate_names$timenam,
-          do_chunks  = TRUE,
-          outdir     = settings$dir_out_tidy_climate,
-          fileprefix = paste0(var, outfile_suffix),
-          overwrite  = settings$overwrite_intermediate,
-          fgetdate   = ifelse(is.function(fgetdate_function), fgetdate_function, NA),
-          # filter_lon_between_degrees = c(-1, 1), # TODO: only for development
-          ncores     = settings$ncores_max,  # parallel::detectCores()
-          ...)
-        )
-
-      dplyr::bind_rows(res_climate_list)
-
+      return(res_climate)
     } else {
       data.frame(input_path = settings$dir_in_climate, msg = "No climate file found.")
     }
