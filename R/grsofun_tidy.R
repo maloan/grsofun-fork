@@ -42,9 +42,7 @@ grsofun_tidy <- function(settings, ...){
   #   ])), collapse = "\n")
   # )}
 
-
-
-  # land mask and elevation in one
+  ## Land mask and elevation in one ------------------------------------------
   res_landmask <- if (!is.na(settings$file_in_landmask) && file.exists(settings$file_in_landmask)) {
     map2tidy::map2tidy(
       nclist = settings$file_in_landmask,
@@ -55,14 +53,14 @@ grsofun_tidy <- function(settings, ...){
       outdir = settings$dir_out_tidy_landmask,
       fileprefix = "WFDEI-elevation",
       overwrite = settings$overwrite_intermediate,
-      ncores     = settings$ncores_max,  # parallel::detectCores()
+      ncores = settings$ncores_max,  # parallel::detectCores()
       ...
     )
   } else {
     data.frame(input_path = settings$file_in_landmask, msg = "No landmask file found.")
   }
 
-  # root zone total whc
+  ## Root zone water storage capacity ----------------------------------------
   res_whc <- if (!is.na(settings$file_in_whc) && file.exists(settings$file_in_whc)) {
     map2tidy::map2tidy(
       nclist = settings$file_in_whc,
@@ -80,7 +78,7 @@ grsofun_tidy <- function(settings, ...){
     data.frame(input_path = settings$file_in_whc, msg = "No whc file found.")
   }
 
-  # elevation
+  ## Elevation ---------------------------------------------------------------
   res_elv <- if (!is.na(settings$file_in_elv) && file.exists(settings$file_in_elv)) {
     map2tidy::map2tidy(
       nclist = settings$file_in_elv,
@@ -98,7 +96,7 @@ grsofun_tidy <- function(settings, ...){
     data.frame(input_path = settings$file_in_elv, msg = "No elv file found.")
   }
 
-  # climate
+  ## Climate -----------------------------------------------------------------
   res_climate_df <-
     if (!is.na(settings$dir_in_climate) && file.exists(settings$dir_in_climate)) {
 
@@ -108,19 +106,18 @@ grsofun_tidy <- function(settings, ...){
 
         # data-product specific variable names
         vars <- c("Tair", "Rainf", "Snowf", "Qair", "SWdown", "PSurf")
-        source_subdirectory <- "[VAR]_daily"
-        source_pattern      <- ".nc"
-        outfile_suffix      <- "_daily_WFDEI"
-        grid_climate_names <- list(
+
+        settings$grid_climate <- list(
           lonnam = "lon",
           latnam = "lat",
-          timenam = "tstep" # or timestp??
+          timenam = "timestp",
+          timedimnam = "tstep"
         )
 
         # watch-wfdei files do not appear to have a CF-compliant time coordinate description.
         # Therefore we need to define a workaround with `fgetdate`
         fgetdate_function <- function(fn){
-          first_day <- gsub(".*_WFDEI_((CRU)*_*)([0-9]*).nc","\\3", x=basename(fn)) |>
+          first_day <- gsub(".*_WFDEI_((CRU)*_*)([0-9]*).nc","\\3", x = basename(fn)) |>
             lubridate::ym()
           return(seq(from = first_day,
                      to   = first_day + months(1) - 1, # go to the end of the month
@@ -133,32 +130,38 @@ grsofun_tidy <- function(settings, ...){
           vars,
           function(var) map2tidy::map2tidy(
             nclist  = list.files(
-              file.path(settings$dir_in_climate, gsub("\\[VAR\\]",var,source_subdirectory)),
-              pattern = source_pattern,
-              full.names = TRUE),
+              file.path(settings$dir_in_climate, gsub("\\[VAR\\]", var, "[VAR]_daily")),
+              pattern = "_2018", # ".nc",  # XXX try
+              full.names = TRUE
+              ),
             varnam  = var,
-            lonnam  = grid_climate_names$lonnam,
-            latnam  = grid_climate_names$latnam,
-            timenam = grid_climate_names$timenam,
+            lonnam  = settings$grid_climate$lonnam,
+            latnam  = settings$grid_climate$latnam,
+            timenam = settings$grid_climate$timenam,
             do_chunks  = TRUE,
             outdir     = settings$dir_out_tidy_climate,
-            fileprefix = paste0(var, outfile_suffix),
+            fileprefix = paste0(var, "_daily_WFDEI"),
             overwrite  = settings$overwrite_intermediate,
             fgetdate   = ifelse(is.function(fgetdate_function), fgetdate_function, NA),
             # filter_lon_between_degrees = c(-1, 1), # TODO: only for development
             ncores     = settings$ncores_max,  # parallel::detectCores()
-            ...)
+            ...
+            )
         )
+
         res_climate <- dplyr::bind_rows(res_climate_list)
 
       } else if(settings$source_climate == "ERA5Land.tp_ssrd_d2m_t2m_sp_u10_v10") {
+
         # fore ERA5Land.tp_ssrd_d2m_t2m_sp_u10_v10: make single tidy file containing all variables
         list_climate_files <- list.files(
           settings$dir_in_climate,
           recursive = TRUE,
           pattern = "ERA5Land.tp_ssrd_d2m_t2m_sp_u10_v10.[0-9]{4}.[0-9]{2}.nc",
           full.names = TRUE)
+
         stopifnot(length(list_climate_files) > 0)
+
         res_climate <- map2tidy::map2tidy(
           nclist     = list_climate_files,
           varnam     = c("tp","ssrd","d2m","t2m","sp","u10","v10"),
@@ -172,7 +175,8 @@ grsofun_tidy <- function(settings, ...){
           fgetdate   = NA,
           # filter_lon_between_degrees = c(1.0, 1.1)#, # TODO: only for development
           ncores     = settings$ncores_max,  # parallel::detectCores()
-          ...)
+          ...
+          )
         # # check:
         # readRDS(file.path(
         # "/data_2/scratch/era5land_munoz-sabater_2021/data",
@@ -192,7 +196,7 @@ grsofun_tidy <- function(settings, ...){
       data.frame(input_path = settings$dir_in_climate, msg = "No climate file found.")
     }
 
-  # fapar
+  ## fAPAR ---------------------------------------------------------------------
   res_fapar <-
     if (!is.na(settings$file_in_fapar) && file.exists(settings$file_in_fapar)) {
       # HARDCODED CODE FOR DIFFERENT FAPAR INPUT FILES:

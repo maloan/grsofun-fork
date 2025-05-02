@@ -1,18 +1,23 @@
 #' @param par ...
 #' @param settings ...
-#' @param list_of_LON_str Longitude indices to process as a vector of strings,
-#'                        e.g. c("LON_+046.250", "LON_+046.750")
 #'
 #' @export
-grsofun_run <- function(par, settings, list_of_LON_str){
-  # list_of_LON_str = c("LON_+046.250", "LON_+046.750")
-
+grsofun_run <- function(par, settings){
 
   # Create necessary output directories
-  dir.create(settings$dir_out,         recursive = TRUE, showWarnings = FALSE)
+  if (!is.na(settings$dir_out)){
+    dir.create(settings$dir_out, recursive = TRUE, showWarnings = FALSE)
+  }
   if (!is.na(settings$dir_out_drivers)){
     dir.create(settings$dir_out_drivers, recursive = TRUE, showWarnings = FALSE)
   }
+
+  # Create vector of strings for identifying tidy files by longitudinal band
+  df_lon_index <- map2tidy::get_df_lon_index(settings$grid)
+  list_of_LON_str <- map2tidy::get_file_suffix(
+    ilon = df_lon_index$lon_index,
+    df_lon_index = df_lon_index
+    )
 
   if (settings$nnodes == 1){
     if (settings$ncores_max == 1){
@@ -150,7 +155,8 @@ grsofun_run_byLON <- function(LON_string, par, settings){
   if (settings$overwrite_intermediate || !file.exists(filnam_drivers)){
 
     # get land mask - variable name hard coded
-    df <- readr::read_rds(paste0(settings$dir_out_tidy_landmask, "WFDEI-elevation_", LON_string, ".rds")) |>
+    filnam <- paste0(settings$dir_out_tidy_landmask, "/WFDEI-elevation", LON_string, ".rds")
+    df <- readr::read_rds(filnam) |>
       dplyr::rename(elv = elevation)
 
     # # get elevation
@@ -161,10 +167,14 @@ grsofun_run_byLON <- function(LON_string, par, settings){
     # ) |>
 
     # get rooting zone water storage capacity information. If missing, assume 200 mm.
-    df_whc <- readr::read_rds(
-      paste0(settings$dir_out_tidy_whc,
-             gsub(".nc","",basename(settings$file_in_whc)),
-             "_", LON_string, ".rds"))
+    filnam <- paste0(
+      settings$dir_out_tidy_whc,
+      "/",
+      gsub(".nc", "" , basename(settings$file_in_whc)),
+      LON_string,
+      ".rds"
+      )
+    df_whc <- readr::read_rds(filnam)
     if (nrow(df_whc) > 0){
       df <- df |>
         dplyr::left_join(
@@ -260,7 +270,8 @@ grsofun_run_byLON <- function(LON_string, par, settings){
     if (settings$source_fapar == "modis"){
 
       # read monthly fAPAR data
-      df_fapar_mon <- readr::read_rds(paste0(settings$dir_out_tidy_fapar, "MODIS-C006_MOD15A2_LAI_FPAR_zmaw_", LON_string, ".rds"))
+      filnam <- paste0(settings$dir_out_tidy_fapar, "/MODIS-C006_MOD15A2_LAI_FPAR_zmaw", LON_string, ".rds")
+      df_fapar_mon <- readr::read_rds(filnam)
 
       # check if something was read
       if ("data.frame" %in% class(df_fapar_mon)){
@@ -271,8 +282,10 @@ grsofun_run_byLON <- function(LON_string, par, settings){
 
       if (avl_fapar){
         df_fapar_mon <- df_fapar_mon |>
+
           # map2tidy outputs 'datetime', but pmodel requires 'date'
           dplyr::mutate(data = purrr::map(data, ~dplyr::rename(., date = datetime))) |>
+
           # parse datetimes from string (output of map2tidy) to datetimes
           dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = lubridate::ymd(date))))
 
@@ -544,17 +557,17 @@ grsofun_run_byLON <- function(LON_string, par, settings){
 
   dir.create(settings$dir_out,     recursive = TRUE, showWarnings = FALSE)  # TODO: make this emit a message
 
-  outpath <- paste0(settings$dir_out, settings$fileprefix, "_", LON_string, ".rds")
+  outpath <- paste0(settings$dir_out, settings$fileprefix, LON_string, ".rds")
   message(paste("Writing file", outpath, "..."))
   readr::write_rds(out, file = outpath)
-
 }
 
 #' @export
 read_forcing_byvar_byLON <- function(var, LON_string, settings){
 
   if (settings$source_climate == "watch-wfdei"){
-    df <- readr::read_rds(paste0(settings$dir_out_tidy_climate, var, "_daily_WFDEI_", LON_string, ".rds")) |>
+    filnam <- paste0(settings$dir_out_tidy_climate, "/", var, "_daily_WFDEI", LON_string, ".rds")
+    df <- readr::read_rds(filnam) |>
     tidyr::unnest(data)
   }
 
