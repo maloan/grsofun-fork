@@ -149,429 +149,321 @@ grsofun_run_byLON <- function(LON_string, par, settings){
 
   if (!is.na(settings$dir_out_drivers)){
     dir.create(settings$dir_out_drivers, recursive = TRUE, showWarnings = FALSE) # TODO: make this emit a message
-    filnam_drivers <- file.path(settings$dir_out_drivers, paste0(settings$fileprefix, "_", LON_string, ".rds"))
+    filnam_drivers <- file.path(settings$dir_out_drivers, paste0(settings$fileprefix, LON_string, ".rds"))
   }
 
-  if (settings$overwrite_intermediate || !file.exists(filnam_drivers)){
+  filnam_output <- paste0(settings$dir_out, settings$fileprefix, LON_string, ".rds")
 
-    # get land mask - variable name hard coded
-    filnam <- paste0(settings$dir_out_tidy_landmask, "/WFDEI-elevation", LON_string, ".rds")
+  if (settings$overwrite || !file.exists(filnam_output)){
 
-    if (!file.exists(filnam)){
-      stop(paste("File does not exist:", filnam))
-    }
+    if (settings$overwrite || !file.exists(filnam_drivers)){
 
-    df <- readr::read_rds(filnam) |>
-      dplyr::rename(elv = elevation)
+      # get land mask - variable name hard coded
+      filnam <- paste0(settings$dir_out_tidy_landmask, "/WFDEI-elevation", LON_string, ".rds")
 
-    # # get elevation
-    # dplyr::left_join(
-    #   readr::read_rds(paste0(settings$dir_out_tidy_elv, "ETOPO1_Bed_g_geotiff_halfdeg_ilon_", ilon, ".rds")) |>
-    #     dplyr::rename(elv = ETOPO1_Bed_g_geotiff),
-    #   dplyr::join_by(lon, lat)
-    # ) |>
-
-    # get rooting zone water storage capacity information. If missing, assume 200 mm.
-    filnam <- paste0(
-      settings$dir_out_tidy_whc,
-      "/",
-      gsub(".nc", "" , basename(settings$file_in_whc)),
-      LON_string,
-      ".rds"
-      )
-    if (!file.exists(filnam)){
-      stop(paste("File does not exist:", filnam))
-    }
-    df_whc <- readr::read_rds(filnam)
-    if (nrow(df_whc) > 0){
-      df <- df |>
-        dplyr::left_join(
-          df_whc |>
-            dplyr::rename(whc = cwdx80_forcing),
-          dplyr::join_by(lon, lat)
-        )
-    } else {
-      df <- df |>
-        dplyr::mutate(whc = 200)
-    }
-
-    df <- df |>
-      dplyr::mutate(whc = ifelse(is.na(whc), 200, whc))
-
-    # Read tidy climate forcing data by longitudinal band and convert units -
-    # product-specific
-    if (settings$source_climate == "watch-wfdei"){
-
-      vars <- c("Tair", "Rainf", "Snowf", "Qair", "SWdown", "PSurf")
-
-      # read tidy data for all variables and join into single data frame
-      kfFEC <- 2.04
-      df_climate <- purrr::map(
-        vars,
-        ~read_forcing_byvar_byLON(., LON_string, settings)
-      ) |>
-        purrr::reduce(
-          dplyr::left_join,
-          dplyr::join_by(lon, lat, datetime)
-        ) |>
-
-        # convert units and rename
-        dplyr::rowwise() |>
-        dplyr::mutate(
-          Tair = Tair - 273.15,  # K -> deg C
-          ppfd = SWdown * kfFEC * 1.0e-6,  # W m-2 -> mol m-2 s-1
-          vapr = rgeco::calc_vp(
-            qair = Qair,
-            patm = PSurf
-          ),
-          vpd = rgeco::calc_vpd(
-            eact = vapr,
-            tc = Tair,
-            patm = PSurf
-          )
-        ) |>
-
-        # XXX try
-        dplyr::mutate(
-          netrad = NA,
-          ccov = 0.5,
-          co2 = 400,
-        ) |>
-        dplyr::select(
-          lon,
-          lat,
-          date = datetime, # map2tidy outputs 'datetime', but pmodel requires 'date'
-          temp = Tair,
-          rain = Rainf,
-          vpd,
-          ppfd,
-          netrad,
-          ccov,
-          snow = Snowf,
-          co2,
-          patm = PSurf,
-          tmin = Tair,
-          tmax = Tair
-        ) |>
-
-        dplyr::group_by(lon, lat) |>
-        tidyr::nest()
-
-      df_climate <- df_climate |>
-        # parse datetimes from string (output of map2tidy) to datetimes
-        dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = lubridate::ymd(date))))
-
-      # # xxx test
-      # df_climate |>
-      #   filter(lat == 50.75) |>
-      #   unnest(data) |>
-      #   ggplot(aes(date, vpd)) +
-      #   geom_line()
-      #
-      # df_climate |>
-      #   filter(lat == 50.75) |>
-      #   unnest(data) |>
-      #   visdat::vis_miss()
-
-    }
-
-    if (settings$source_fapar == "modis"){
-
-      # read monthly fAPAR data
-      filnam <- paste0(settings$dir_out_tidy_fapar, "/MODIS-C006_MOD15A2_LAI_FPAR_zmaw", LON_string, ".rds")
       if (!file.exists(filnam)){
-        stop(paste("File does not exist: ", filnam))
+        stop(paste("File does not exist:", filnam))
       }
 
-      df_fapar_mon <- readr::read_rds(filnam)
+      df <- readr::read_rds(filnam) |>
+        dplyr::rename(elv = elevation)
 
-      # check if something was read
-      if ("data.frame" %in% class(df_fapar_mon)){
-        avl_fapar <- TRUE
-      } else {
-        avl_fapar <- FALSE
+      # # get elevation
+      # dplyr::left_join(
+      #   readr::read_rds(paste0(settings$dir_out_tidy_elv, "ETOPO1_Bed_g_geotiff_halfdeg_ilon_", ilon, ".rds")) |>
+      #     dplyr::rename(elv = ETOPO1_Bed_g_geotiff),
+      #   dplyr::join_by(lon, lat)
+      # ) |>
+
+      # get rooting zone water storage capacity information. If missing, assume 200 mm.
+      filnam <- paste0(
+        settings$dir_out_tidy_whc,
+        "/",
+        gsub(".nc", "" , basename(settings$file_in_whc)),
+        LON_string,
+        ".rds"
+      )
+      if (!file.exists(filnam)){
+        stop(paste("File does not exist:", filnam))
       }
-
-      if (avl_fapar){
-        df_fapar_mon <- df_fapar_mon |>
-
-          # map2tidy outputs 'datetime', but pmodel requires 'date'
-          dplyr::mutate(data = purrr::map(data, ~dplyr::rename(., date = datetime))) |>
-
-          # parse datetimes from string (output of map2tidy) to datetimes
-          dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = lubridate::ymd(date))))
-
-        # # xxx problem: no decembers are read after 2014
-        # df_fapar_mon |> slice(1) |>
-        #   unnest(data) |>
-        #   select(date) |>
-        #   distinct() |>
-        #   arrange(date) |>
-        #   View()
-
-        # # xxx try
-        # filter(lat == 50.75)
-
-        # df_fapar_mon$data[[1]] |>
-        #   ggplot(aes(date, fpar)) +
-        #   geom_line()
-
-        # linearly interpolate monthly fAPAR values to daily
-        dates <- df_fapar_mon$data[[1]]$date
-        year_start <- min(lubridate::year(dates))
-        year_end <- max(lubridate::year(dates))
-
-        # create a data frame that spans all dates between start and end of simulation
-        # consider only complete years
-        ddf <- dplyr::tibble(
-          date = seq(
-            from = lubridate::ymd(paste0(year_start, "-01-01")),
-            to = lubridate::ymd(paste0(year_end, "-12-31")),
-            by = "days"
-          ))
-
-        # function to linearly interpolate (leaves trailing NAs)
-        interpolate2daily_fpar <- function(df, ddf){
-          ddf <- ddf |>
-            dplyr::left_join(
-              df,
-              by = "date"
-            ) |>
-            dplyr::mutate(
-              fpar_daily = zoo::na.approx(fpar, na.rm = FALSE)
-            )
-
-          # fill remaining with mean seasonal cycle
-          meandf <- ddf |>
-            dplyr::mutate(doy = lubridate::yday(date)) |>
-            dplyr::group_by(doy) |>
-            dplyr::summarise(fpar_meandoy = mean(fpar_daily, na.rm = TRUE))
-
-          ddf <- ddf |>
-            dplyr::mutate(doy = lubridate::yday(date)) |>
-            dplyr::left_join(
-              meandf,
-              by = "doy"
-            ) |>
-            dplyr::mutate(fpar_daily = ifelse(is.na(fpar_daily), fpar_meandoy, fpar_daily)) |>
-            dplyr::select(-fpar_meandoy, -doy)
-
-          return(ddf)
-        }
-
-        df_fapar <- df_fapar_mon |>
-          dplyr::mutate(data = purrr::map(data, ~interpolate2daily_fpar(., ddf))) |>
-          dplyr::mutate(data = purrr::map(data, ~dplyr::select(., -fpar))) |>
-          dplyr::mutate(data = purrr::map(data, ~dplyr::rename(., fapar = fpar_daily)))
-
-        # df_fapar$data[[1]] |>
-        #   ggplot(aes(date, fpar)) +
-        #   geom_line()
-
-        # combine to capture all gridcells of the climate forcing
-        # if fapar forcing is missing, set fapar = 0
-        df_forcing <- df_climate |>
-          tidyr::unnest(data) |>
+      df_whc <- readr::read_rds(filnam)
+      if (nrow(df_whc) > 0){
+        df <- df |>
           dplyr::left_join(
-            df_fapar |>
-              tidyr::unnest(data),
-            by = c("lon", "lat", "date")
+            df_whc |>
+              dplyr::rename(whc = cwdx80_forcing),
+            dplyr::join_by(lon, lat)
+          )
+      } else {
+        df <- df |>
+          dplyr::mutate(whc = 200)
+      }
+
+      df <- df |>
+        dplyr::mutate(whc = ifelse(is.na(whc), 200, whc))
+
+      # Read tidy climate forcing data by longitudinal band and convert units -
+      # product-specific
+      if (settings$source_climate == "watch-wfdei"){
+
+        vars <- c("Tair", "Rainf", "Snowf", "Qair", "SWdown", "PSurf")
+
+        # read tidy data for all variables and join into single data frame
+        kfFEC <- 2.04
+        df_climate <- purrr::map(
+          vars,
+          ~read_forcing_byvar_byLON(., LON_string, settings)
+        ) |>
+          purrr::reduce(
+            dplyr::left_join,
+            dplyr::join_by(lon, lat, datetime)
           ) |>
-          dplyr::mutate(fapar = ifelse(is.na(fapar), 0, fapar)) |>
+
+          # convert units and rename
+          dplyr::rowwise() |>
+          dplyr::mutate(
+            Tair = Tair - 273.15,  # K -> deg C
+            ppfd = SWdown * kfFEC * 1.0e-6,  # W m-2 -> mol m-2 s-1
+            vapr = rgeco::calc_vp(
+              qair = Qair,
+              patm = PSurf
+            ),
+            vpd = rgeco::calc_vpd(
+              eact = vapr,
+              tc = Tair,
+              patm = PSurf
+            )
+          ) |>
+
+          # XXX try
+          dplyr::mutate(
+            netrad = NA,
+            ccov = 0.5,
+            co2 = 400,
+          ) |>
+          dplyr::select(
+            lon,
+            lat,
+            date = datetime, # map2tidy outputs 'datetime', but pmodel requires 'date'
+            temp = Tair,
+            rain = Rainf,
+            vpd,
+            ppfd,
+            netrad,
+            ccov,
+            snow = Snowf,
+            co2,
+            patm = PSurf,
+            tmin = Tair,
+            tmax = Tair
+          ) |>
+
           dplyr::group_by(lon, lat) |>
           tidyr::nest()
 
-      } else {
-        # fapar not available - set to zero
-        df_forcing <- df_climate |>
-          dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., fapar = 0)))
+        df_climate <- df_climate |>
+          # parse datetimes from string (output of map2tidy) to datetimes
+          dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = lubridate::ymd(date))))
+
       }
-    }
 
-    # # xxx test
-    # df_forcing |>
-    #   filter(lat == 50.75) |>
-    #   unnest(data) |>
-    #   ggplot(aes(date, vpd)) +
-    #   geom_line()
-    #
-    # df_forcing |>
-    #   filter(lat == 50.75) |>
-    #   unnest(data) |>
-    #   visdat::vis_miss()
+      if (settings$source_fapar == "modis"){
 
-    # populate driver object
-    if (settings$model == "pmodel"){
+        # read monthly fAPAR data
+        filnam <- paste0(settings$dir_out_tidy_fapar, "/MODIS-C006_MOD15A2_LAI_FPAR_zmaw", LON_string, ".rds")
+        if (!file.exists(filnam)){
+          stop(paste("File does not exist: ", filnam))
+        }
 
-      df <- df |>
+        df_fapar_mon <- readr::read_rds(filnam)
 
-        # merge with forcing time series
-        dplyr::left_join(
-          df_forcing |>
-            dplyr::rename(forcing = data),
-          dplyr::join_by(lon, lat)
-        ) |>
+        # check if something was read
+        if ("data.frame" %in% class(df_fapar_mon) && nrow(df_fapar_mon) > 0){
+          avl_fapar <- TRUE
+        } else {
+          avl_fapar <- FALSE
+        }
 
-        # construct site name from longitude and latitude indices
-        dplyr::mutate(
-          # LAT_string = sprintf("LAT_%+08.3f", lat),
-          # sitename = paste0("grid_", LON_string, "_", LAT_string)
-          sitename = paste0("grid_", LON_string, "_", sprintf("LAT_%+08.3f", lat))
-        ) |>
+        if (avl_fapar){
 
-        # create simulation parameters (common for all)
-        dplyr::mutate(
-          spinup = TRUE,
-          spinupyears = settings$spinupyears,
-          recycle = settings$recycle,
-          outdt = 1,
-          ltre = FALSE,
-          ltne = FALSE,
-          ltrd = FALSE,
-          ltnd = FALSE,
-          lgr3 = TRUE,
-          lgn3 = FALSE,
-          lgr4 = FALSE,
-        ) |>
+          df_fapar_mon <- df_fapar_mon |>
 
-        # group simulation parameters
-        tidyr::nest(
-          params_siml = c(
-            spinup,
-            spinupyears,
-            recycle,
-            outdt,
-            ltre,
-            ltne,
-            ltrd,
-            ltnd,
-            lgr3,
-            lgn3,
-            lgr4
+            # map2tidy outputs 'datetime', but pmodel requires 'date'
+            dplyr::mutate(data = purrr::map(data, ~dplyr::rename(., date = datetime))) |>
+
+            # parse datetimes from string (output of map2tidy) to datetimes
+            dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = lubridate::ymd(date))))
+
+          # linearly interpolate monthly fAPAR values to daily
+          dates <- df_fapar_mon$data[[1]]$date
+          year_start <- min(lubridate::year(dates))
+          year_end <- max(lubridate::year(dates))
+
+          # create a data frame that spans all dates between start and end of simulation
+          # consider only complete years
+          ddf <- dplyr::tibble(
+            date = seq(
+              from = lubridate::ymd(paste0(year_start, "-01-01")),
+              to = lubridate::ymd(paste0(year_end, "-12-31")),
+              by = "days"
+            ))
+
+          # function to linearly interpolate (leaves trailing NAs)
+          interpolate2daily_fpar <- function(df, ddf){
+            ddf <- ddf |>
+              dplyr::left_join(
+                df,
+                by = "date"
+              ) |>
+              dplyr::mutate(
+                fpar_daily = zoo::na.approx(fpar, na.rm = FALSE)
+              )
+
+            # fill remaining with mean seasonal cycle
+            meandf <- ddf |>
+              dplyr::mutate(doy = lubridate::yday(date)) |>
+              dplyr::group_by(doy) |>
+              dplyr::summarise(fpar_meandoy = mean(fpar_daily, na.rm = TRUE))
+
+            ddf <- ddf |>
+              dplyr::mutate(doy = lubridate::yday(date)) |>
+              dplyr::left_join(
+                meandf,
+                by = "doy"
+              ) |>
+              dplyr::mutate(fpar_daily = ifelse(is.na(fpar_daily), fpar_meandoy, fpar_daily)) |>
+              dplyr::select(-fpar_meandoy, -doy)
+
+            return(ddf)
+          }
+
+          df_fapar <- df_fapar_mon |>
+            dplyr::mutate(data = purrr::map(data, ~interpolate2daily_fpar(., ddf))) |>
+            dplyr::mutate(data = purrr::map(data, ~dplyr::select(., -fpar))) |>
+            dplyr::mutate(data = purrr::map(data, ~dplyr::rename(., fapar = fpar_daily)))
+
+          # combine to capture all gridcells of the climate forcing
+          # if fapar forcing is missing, set fapar = 0
+          df_forcing <- df_climate |>
+            tidyr::unnest(data) |>
+            dplyr::left_join(
+              df_fapar |>
+                tidyr::unnest(data),
+              by = c("lon", "lat", "date")
+            ) |>
+            dplyr::mutate(fapar = ifelse(is.na(fapar), 0, fapar)) |>
+            dplyr::group_by(lon, lat) |>
+            tidyr::nest()
+
+        } else {
+          # fapar not available - set to zero
+          df_forcing <- df_climate |>
+            dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., fapar = 0)))
+        }
+      }
+
+      # populate driver object
+      if (settings$model == "pmodel"){
+
+        df <- df |>
+
+          # merge with forcing time series
+          dplyr::left_join(
+            df_forcing |>
+              dplyr::rename(forcing = data),
+            dplyr::join_by(lon, lat)
+          ) |>
+
+          # construct site name from longitude and latitude indices
+          dplyr::mutate(
+            # LAT_string = sprintf("LAT_%+08.3f", lat),
+            # sitename = paste0("grid_", LON_string, "_", LAT_string)
+            sitename = paste0("grid_", LON_string, "_", sprintf("LAT_%+08.3f", lat))
+          ) |>
+
+          # create simulation parameters (common for all)
+          dplyr::mutate(
+            spinup = TRUE,
+            spinupyears = settings$spinupyears,
+            recycle = settings$recycle,
+            outdt = 1,
+            ltre = FALSE,
+            ltne = FALSE,
+            ltrd = FALSE,
+            ltnd = FALSE,
+            lgr3 = TRUE,
+            lgn3 = FALSE,
+            lgr4 = FALSE,
+          ) |>
+
+          # group simulation parameters
+          tidyr::nest(
+            params_siml = c(
+              spinup,
+              spinupyears,
+              recycle,
+              outdt,
+              ltre,
+              ltne,
+              ltrd,
+              ltnd,
+              lgr3,
+              lgn3,
+              lgr4
+            )
+          ) |>
+
+          # group site meta info
+          tidyr::nest(
+            site_info = c(
+              lon,
+              lat,
+              elv,
+              whc
+            )
+          ) |>
+
+          # put columns in order
+          dplyr::select(
+            sitename,
+            params_siml,
+            site_info,
+            forcing
           )
-        ) |>
+      }
 
-        # group site meta info
-        tidyr::nest(
-          site_info = c(
-            lon,
-            lat,
-            elv,
-            whc
-          )
-        ) |>
+      if (!is.na(settings$dir_out_drivers)){
+        message(paste("Writing file", filnam_drivers, "..."))
+        readr::write_rds(df, file = filnam_drivers)
+      }
 
-        # put columns in order
-        dplyr::select(
-          sitename,
-          params_siml,
-          site_info,
-          forcing
-        )
+    } else {
+
+      df <- readr::read_rds(filnam_drivers)
+
     }
 
-    if (!is.na(settings$dir_out_drivers)){
-      message(paste("Writing file", filnam_drivers, "..."))
-      readr::write_rds(df, file = filnam_drivers)
-    }
+
+    # run model
+    out <- rsofun::runread_pmodel_f(
+      # drivers = df,
+      # Remove a day in the leap years...     # TODO: is this really needed for rsofun?
+      drivers = mutate(df,
+                       forcing = purrr::map(forcing,
+                                            ~dplyr::filter(., !(format(date, "%m-%d") == "02-29")))),
+      par = par
+    )
+
+    dir.create(settings$dir_out, recursive = TRUE, showWarnings = FALSE)  # TODO: make this emit a message
+    message(paste("Writing file", filnam_output, "..."))
+    readr::write_rds(out, file = filnam_output)
 
   } else {
 
-    df <- readr::read_rds(filnam_drivers)
+    message(paste("File already exists", filnam_output, "."))
 
   }
 
-  # # some gridcells have no forcing because no fapar data is available
-  # # fill them with NA forcing as forcing which triggers an empty rsofun run
-  # df <- df |>
-  #   mutate(isnull = purrr::map_lgl(forcing, ~is.null(.)))
-  # df_forcing_empty <- df |>
-  #   filter(!isnull) |>
-  #   slice(1) |>
-  #   pull(forcing)
-  # df_forcing_empty <- df_forcing_empty[[1]] |>
-  #   slice(1) |>
-  #   mutate(
-  #     dplyr::across(
-  #       c(temp, rain, vpd, ppfd, netrad, ccov, snow, co2, patm, tmin, tmax, fapar),
-  #       ~ NA
-  #       ))
-  # df <- df |>
-  #   mutate(forcing = purrr::map(forcing, ~ifelse(isnull, df_forcing_empty, forcing)))
-
-  # # xxx test forcing (near DE-Tha)
-  # df_fdk <- readRDS("~/data/FluxDataKit/v3.1/rsofun_driver_data_v3.1.rds")
-  #
-  # tmp <- df_fdk |>
-  #   filter(sitename == "DE-Tha") |>
-  #   select(forcing) |>
-  #   unnest(forcing) |>
-  #   rename_with(~stringr::str_c("fdk_", .), 2:17) |>
-  #   right_join(
-  #     df |>
-  #       select(sitename, forcing) |>
-  #       filter(sitename == "grid_LON_+013.750_LAT_+050.750") |>
-  #       unnest(forcing),
-  #     by = c("date")
-  #   )
-  #
-  # tmp |>
-  #   visdat::vis_miss()
-  #
-  # skimr::skim(tmp)
-  #
-  # tmp |>
-  #   ggplot() +
-  #   geom_line(aes(date, fapar), color = "royalblue") +
-  #   geom_line(aes(date, fdk_fapar))
-
-  # run model
-  out <- rsofun::runread_pmodel_f(
-    # drivers = df,
-    # Remove a day in the leap years...     # TODO: is this really needed for rsofun?
-    drivers = mutate(df,
-                     forcing = purrr::map(forcing,
-                                          ~dplyr::filter(., !(format(date, "%m-%d") == "02-29")))),
-    par = par
-  )
-
-  # # xxx test run model
-  # out2 <- rsofun::runread_pmodel_f(
-  #   drivers = df_fdk |>
-  #     filter(sitename == "DE-Tha") |>
-  #     mutate(forcing = purrr::map(forcing, ~mutate(., patm = zoo::na.approx(patm)))),
-  #   par = par
-  # )
-  #
-  # # xxx test
-  # tmp2 <- out2 |>
-  #   select(data) |>
-  #   unnest(data) |>
-  #   rename_with(~stringr::str_c("fdk_", .), 2:21) |>
-  #   right_join(
-  #     out |>
-  #       select(data) |>
-  #       unnest(data),
-  #     by = c("date")
-  #   )
-  #
-  # tmp2 |>
-  #   ggplot() +
-  #   geom_line(aes(date, wcont), color = "royalblue") +
-  #   geom_line(aes(date, fdk_wcont))
-
-  # # xxx test
-  # out |>
-  #   filter(sitename == "grid_LON_+013.750_LAT_+050.750") |>
-  #   unnest(data) |>
-  #   ggplot(aes(date, gpp)) +
-  #   geom_line()
-
-  dir.create(settings$dir_out,     recursive = TRUE, showWarnings = FALSE)  # TODO: make this emit a message
-
-  outpath <- paste0(settings$dir_out, settings$fileprefix, LON_string, ".rds")
-  message(paste("Writing file", outpath, "..."))
-  readr::write_rds(out, file = outpath)
 }
 
 #' @export

@@ -33,6 +33,7 @@ library(ggplot2)
 library(dplyr)
 library(rnaturalearth)
 library(cowplot)
+library(map2tidy)
 ```
 
 ### Specify settings
@@ -53,15 +54,18 @@ settings <- list(
 
   ### final model output
   # dir_out = here::here("output/out_tidy/"),                # path for tidy model output
-  dir_out     = "/data/scratch/bstocker/grsofun_output/",     # path for tidy model output
-  dir_out_nc  = "/data/scratch/bstocker/grsofun_output/",     # xxx not yet handled
+  # dir_out     = "/data/scratch/bstocker/grsofun_output/",     # path for tidy model output
+  dir_out     = "~/data/grsofun_output/",     # path for tidy model output
+  # dir_out_nc  = "/data/scratch/bstocker/grsofun_output/",     # xxx not yet handled
+  dir_out_nc  = "~/data/grsofun_output/",     # xxx not yet handled
   save = list(            # a named list where names correspond to variable names
     gpp = "mon"           #   in rsofun output and the value is a string specifying
   ),                      #   the temporal resolution to which global output is to be aggregated.
 
   ### intermediate model output
-  dir_out_drivers = "/data/scratch/bstocker/grsofun_input/",  # If a path is provided rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run(). If dir_out_drivers is 'NA' driver object are not stored.
-  overwrite_intermediate = FALSE,      # whether files with tidy forcing data and drivers are to be overwritten. If false, reads files if available instead of re-creating them.
+  # dir_out_drivers = "/data/scratch/bstocker/grsofun_input/",  # If a path is provided rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run(). If dir_out_drivers is 'NA' driver object are not stored.
+  dir_out_drivers = "~/data/grsofun_input/",  # If a path is provided rsofun driver object is to be saved. Uses additional disk space but substantially speeds up grsofun_run(). If dir_out_drivers is 'NA' driver object are not stored.
+  overwrite = FALSE,      # whether files with tidy forcing data and drivers are to be overwritten. If false, reads files if available instead of re-creating them.
 
   ### tidy model input config:
   grid = list( # a list specifying the grid which must be common to all forcing data
@@ -74,39 +78,49 @@ settings <- list(
   ), 
 
   source_climate       = "watch-wfdei",  # a string specifying climate forcing dataset-specific variables
-  dir_in_climate       = "/data/archive/wfdei_weedon_2014/data", # path to where climate forcing data is located
-  dir_out_tidy_climate = "/data/scratch/bstocker/wfdei_weedon_2014/data/tidy",  # path to where tidy climate forcing data is to be written
+  # dir_in_climate       = "/data/archive/wfdei_weedon_2014/data", # path to where climate forcing data is located
+  dir_in_climate       = "~/data/watch_wfdei/", # path to where climate forcing data is located
+  # dir_out_tidy_climate = "/data/scratch/bstocker/wfdei_weedon_2014/data/tidy",  # path to where tidy climate forcing data is to be written
+  dir_out_tidy_climate = "~/data/watch_wfdei/tidy",  # path to where tidy climate forcing data is to be written
 
   source_fapar       = "modis",   # a string specifying fAPAR forcing dataset-specific variables
-  file_in_fapar      = "/data/archive/landcovermodis_friedl_2015/data/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",  # path to where fAPAR forcing data is located
-  dir_out_tidy_fapar = "/data/scratch/bstocker/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/tidy",  # path to where tidy fAPAR forcing data is to be written
+  # file_in_fapar      = "/data/archive/landcovermodis_friedl_2015/data/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",  # path to where fAPAR forcing data is located
+  file_in_fapar      = "~/data/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",  # path to where fAPAR forcing data is located
+  dir_out_tidy_fapar = "~/data/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/tidy/",  # path to where tidy fAPAR forcing data is to be written
 
   # file_in_whc    = "/data/archive/whc_stocker_2023/data/cwdx80_forcing.nc",
-  file_in_whc      = "/data/archive/whc_stocker_2023/data/remap/cwdx80_forcing_0.5degbil.nc",
-  dir_out_tidy_whc = "/data/scratch/bstocker/whc_stocker_2023/tidy", # path to where tidy  root zone storage capacity forcing data is to be written
+  # file_in_whc      = "/data/archive/whc_stocker_2023/data/remap/cwdx80_forcing_0.5degbil.nc",
+  file_in_whc      = "~/data/mct_data/cwdx80_forcing_halfdeg.nc",
+  # dir_out_tidy_whc = "/data/scratch/bstocker/whc_stocker_2023/tidy", # path to where tidy  root zone storage capacity forcing data is to be written
+  dir_out_tidy_whc = "~/data/mct_data/tidy/", # path to where tidy  root zone storage capacity forcing data is to be written
 
-  file_in_landmask      = "/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc", # path to where land mask data is located
-  dir_out_tidy_landmask = "/data/scratch/bstocker/wfdei_weedon_2014/data/tidy", # path to where tidy land mask data is to be written
+  # file_in_landmask      = "/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc", # path to where land mask data is located
+  file_in_landmask      = "~/data/watch_wfdei/WFDEI-elevation.nc", # path to where land mask data is located
+  # dir_out_tidy_landmask = "/data/scratch/bstocker/wfdei_weedon_2014/data/tidy", # path to where tidy land mask data is to be written
+  dir_out_tidy_landmask = "~/data/watch_wfdei/tidy", # path to where tidy land mask data is to be written
 
-  file_in_elv      = "/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc",        # path to where elevation data is located
-  dir_out_tidy_elv = "/data/scratch/bstocker/wfdei_weedon_2014/data/tidy" # path to where tidy elevation data is to be written
+  # file_in_elv      = "/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc",        # path to where elevation data is located
+  # dir_out_tidy_elv = "/data/scratch/bstocker/wfdei_weedon_2014/data/tidy" # path to where tidy elevation data is to be written
+
+  file_in_elv      = "~/data/watch_wfdei/WFDEI-elevation.nc",        # path to where elevation data is located
+  dir_out_tidy_elv = "~/data/watch_wfdei/tidy" # path to where tidy elevation data is to be written
 )
 ```
 
 ### Specify model parameters
 
 ```{r}
-par <- list(
-  kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
-  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
-  kphio_par_b        = 1.0,
-  soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-  soilm_betao        = 0.0,
+params_modl <- list(
+  kphio              = 5.000000e-02, # chosen to be too high for demonstration
+  kphio_par_a        =-2.289344e-03,
+  kphio_par_b        = 1.525094e+01,
+  soilm_thetastar    = 1.577507e+02,
+  soilm_betao        = 1.169702e-04,
   beta_unitcostratio = 146.0,
-  rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-  tau_acclim         = 30.0,
+  rd_to_vcmax        = 0.014,
+  tau_acclim         = 20.0,
   kc_jmax            = 0.41
-)
+  )
 ```
 
 ### Make forcing tidy

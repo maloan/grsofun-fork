@@ -12,36 +12,6 @@
 
 grsofun_tidy <- function(settings, ...){
 
-  # check beforehand if all outdirs (or their ) are writable:
-  # # TODO: deactivated because not yet working with subdirectories, i.e. whe
-  # #       mkdir has to create mutliple subfolders...
-  # is_writable <- function(path){file.access(path, mode = 2) == 0}
-  # # assert_writable <- function(path){
-  # #   is_writable(path) ||
-  # #     stop(sprintf("Path %s is not writable. Please correct!", path))
-  # # }
-  # list_writable_directories <- lapply(
-  #   settings[c(# outfiles of grsofun_tidy()
-  #              "dir_out_tidy_landmask",
-  #              "dir_out_tidy_whc",
-  #              "dir_out_tidy_fapar",
-  #              "dir_out_tidy_climate",
-  #              # outfiles of grsofun_run()
-  #              "dir_out_drivers",
-  #              "dir_out"
-  #              # outfiles of grsofun_collect()
-  #              # "dir_out_nc"
-  #              )],
-  #   # assert_writable)
-  #   is_writable)
-  # if(suppressWarnings(!all(list_writable_directories))){stop(
-  #   "Not all out directories are writable. Make sure you have the permissions for:",
-  #   "\n",
-  #   paste(capture.output(print(settings[
-  #     names(list_writable_directories[!unlist(list_writable_directories)])
-  #   ])), collapse = "\n")
-  # )}
-
   ## Land mask and elevation in one ------------------------------------------
   res_landmask <- if (!is.na(settings$file_in_landmask) && file.exists(settings$file_in_landmask)) {
     map2tidy::map2tidy(
@@ -52,7 +22,7 @@ grsofun_tidy <- function(settings, ...){
       do_chunks = TRUE,
       outdir = settings$dir_out_tidy_landmask,
       fileprefix = "WFDEI-elevation",
-      overwrite = settings$overwrite_intermediate,
+      overwrite = settings$overwrite,
       ncores = settings$ncores_max,  # parallel::detectCores()
       ...
     )
@@ -62,7 +32,7 @@ grsofun_tidy <- function(settings, ...){
 
   ## Root zone water storage capacity ----------------------------------------
   res_whc <- if (!is.na(settings$file_in_whc) && file.exists(settings$file_in_whc)) {
-    map2tidy::map2tidy(
+    map2tidy(
       nclist = settings$file_in_whc,
       varnam = "cwdx80_forcing",
       lonnam = "lon",
@@ -70,7 +40,7 @@ grsofun_tidy <- function(settings, ...){
       do_chunks = TRUE,
       outdir = settings$dir_out_tidy_whc,
       fileprefix = gsub(".nc","",basename(settings$file_in_whc)),#"cwdx80_forcing_halfdeg",
-      overwrite = settings$overwrite_intermediate,
+      overwrite = settings$overwrite,
       ncores     = settings$ncores_max,  # parallel::detectCores()
       ...
     )
@@ -88,7 +58,7 @@ grsofun_tidy <- function(settings, ...){
       do_chunks = TRUE,
       outdir = settings$dir_out_tidy_elv,
       fileprefix = "WFDEI-elevation", # fileprefix = "ETOPO1_Bed_g_geotiff_halfdeg",
-      overwrite = settings$overwrite_intermediate,
+      overwrite = settings$overwrite,
       ncores    = settings$ncores_max,  # parallel::detectCores()
       ...
     )
@@ -131,7 +101,7 @@ grsofun_tidy <- function(settings, ...){
           function(var) map2tidy::map2tidy(
             nclist  = list.files(
               file.path(settings$dir_in_climate, gsub("\\[VAR\\]", var, "[VAR]_daily")),
-              pattern = "_2018", # ".nc",  # XXX try
+              pattern = "daily_.*_2018..\\.nc$", # ".nc",  # XXX try
               full.names = TRUE
               ),
             varnam  = var,
@@ -141,7 +111,7 @@ grsofun_tidy <- function(settings, ...){
             do_chunks  = TRUE,
             outdir     = settings$dir_out_tidy_climate,
             fileprefix = paste0(var, "_daily_WFDEI"),
-            overwrite  = settings$overwrite_intermediate,
+            overwrite  = settings$overwrite,
             fgetdate   = ifelse(is.function(fgetdate_function), fgetdate_function, NA),
             # filter_lon_between_degrees = c(-1, 1), # TODO: only for development
             ncores     = settings$ncores_max,  # parallel::detectCores()
@@ -172,7 +142,7 @@ grsofun_tidy <- function(settings, ...){
           do_chunks  = TRUE,
           outdir     = settings$dir_out_tidy_climate,
           fileprefix = "ERA5Land_hourly.tp_ssrd_d2m_t2m_sp_u10_v10",
-          overwrite  = settings$overwrite_intermediate,
+          overwrite  = settings$overwrite,
           fgetdate   = NA,
           # filter_lon_between_degrees = c(1.0, 1.1)#, # TODO: only for development
           ncores     = settings$ncores_max,  # parallel::detectCores()
@@ -204,7 +174,7 @@ grsofun_tidy <- function(settings, ...){
     if (!is.na(settings$file_in_fapar) && file.exists(settings$file_in_fapar)) {
       # HARDCODED CODE FOR DIFFERENT FAPAR INPUT FILES:
       if (settings$source_fapar == "modis"){
-        map2tidy::map2tidy(
+        map2tidy(
           nclist = settings$file_in_fapar,
           varnam = "fpar",
           lonnam = "lon",
@@ -213,7 +183,7 @@ grsofun_tidy <- function(settings, ...){
           do_chunks = TRUE,
           outdir = settings$dir_out_tidy_fapar,
           fileprefix = "MODIS-C006_MOD15A2_LAI_FPAR_zmaw",
-          overwrite = settings$overwrite_intermediate,
+          overwrite = settings$overwrite,
           # filter_lon_between_degrees = c(-1,1), # TODO: only for development
           ncores     = settings$ncores_max,  # parallel::detectCores()
           ...
