@@ -156,6 +156,11 @@ grsofun_run_byLON <- function(LON_string, par, settings){
 
     # get land mask - variable name hard coded
     filnam <- paste0(settings$dir_out_tidy_landmask, "/WFDEI-elevation", LON_string, ".rds")
+
+    if (!file.exists(filnam)){
+      stop(paste("File does not exist:", filnam))
+    }
+
     df <- readr::read_rds(filnam) |>
       dplyr::rename(elv = elevation)
 
@@ -174,6 +179,9 @@ grsofun_run_byLON <- function(LON_string, par, settings){
       LON_string,
       ".rds"
       )
+    if (!file.exists(filnam)){
+      stop(paste("File does not exist:", filnam))
+    }
     df_whc <- readr::read_rds(filnam)
     if (nrow(df_whc) > 0){
       df <- df |>
@@ -271,6 +279,10 @@ grsofun_run_byLON <- function(LON_string, par, settings){
 
       # read monthly fAPAR data
       filnam <- paste0(settings$dir_out_tidy_fapar, "/MODIS-C006_MOD15A2_LAI_FPAR_zmaw", LON_string, ".rds")
+      if (!file.exists(filnam)){
+        stop(paste("File does not exist: ", filnam))
+      }
+
       df_fapar_mon <- readr::read_rds(filnam)
 
       # check if something was read
@@ -567,6 +579,9 @@ read_forcing_byvar_byLON <- function(var, LON_string, settings){
 
   if (settings$source_climate == "watch-wfdei"){
     filnam <- paste0(settings$dir_out_tidy_climate, "/", var, "_daily_WFDEI", LON_string, ".rds")
+    if (!file.exists(filnam)){
+      stop(paste("File does not exist:", filnam))
+    }
     df <- readr::read_rds(filnam) |>
     tidyr::unnest(data)
   }

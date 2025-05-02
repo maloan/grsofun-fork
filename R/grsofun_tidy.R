@@ -151,14 +151,15 @@ grsofun_tidy <- function(settings, ...){
 
         res_climate <- dplyr::bind_rows(res_climate_list)
 
-      } else if(settings$source_climate == "ERA5Land.tp_ssrd_d2m_t2m_sp_u10_v10") {
+      } else if (settings$source_climate == "ERA5Land.tp_ssrd_d2m_t2m_sp_u10_v10") {
 
         # fore ERA5Land.tp_ssrd_d2m_t2m_sp_u10_v10: make single tidy file containing all variables
         list_climate_files <- list.files(
           settings$dir_in_climate,
           recursive = TRUE,
           pattern = "ERA5Land.tp_ssrd_d2m_t2m_sp_u10_v10.[0-9]{4}.[0-9]{2}.nc",
-          full.names = TRUE)
+          full.names = TRUE
+          )
 
         stopifnot(length(list_climate_files) > 0)
 
@@ -177,11 +178,13 @@ grsofun_tidy <- function(settings, ...){
           ncores     = settings$ncores_max,  # parallel::detectCores()
           ...
           )
+
         # # check:
         # readRDS(file.path(
         # "/data_2/scratch/era5land_munoz-sabater_2021/data",
         # "out_tidy/ERA5Land_hourly.tp_ssrd_d2m_t2m_sp_u10_v10_LON_+001.100.rds")) |>
         #   dplyr::slice(1) |> tidyr::unnest(data)
+
       } else if(settings$source_climate == "some-other-climate-source-to-be-defined") {
         # NOTE: add future sources here
         # define: vars, outfile_suffix, source_subdirectory, source_pattern, fgetdate_function
