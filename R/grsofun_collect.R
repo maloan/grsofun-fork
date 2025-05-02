@@ -4,8 +4,6 @@
 #' @export
 #'
 #' @param settings ...
-#' @param list_of_LON_str Longitude indices to process as a vector of strings,
-#'                        e.g. c("LON_+046.250", "LON_+046.750")
 #' @param return_data Flag whether to return loaded data in the R session. If FALSE
 #'                    only RDS files are written to disk, if TRUE RDS files are
 #'                    written to disk AND the data.frame is returned.
@@ -13,9 +11,15 @@
 #' @export
 grsofun_collect <- function(
     settings,
-    list_of_LON_str, # list_of_LON_str = c("LON_+046.250", "LON_+046.750")
     return_data = FALSE
 ){
+
+  # Create vector of strings for identifying tidy files by longitudinal band
+  df_lon_index <- map2tidy::get_df_lon_index(settings$grid)
+  list_of_LON_str <- map2tidy::get_file_suffix(
+    ilon = df_lon_index$lon_index,
+    df_lon_index = df_lon_index
+  )
 
   if (settings$ncores_max == 1){
 
@@ -93,7 +97,7 @@ grsofun_collect_byLON <- function(
     return_data = FALSE
 ){
 
-  outpath <- paste0(settings$dir_out, settings$fileprefix, "_", LON_string, ".rds")
+  outpath <- paste0(settings$dir_out, settings$fileprefix, LON_string, ".rds")
   message(paste("Reading file", outpath, "..."))
   ddf <- readr::read_rds(file = outpath)
 

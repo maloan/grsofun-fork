@@ -110,7 +110,7 @@ settings <- list(
 ### Specify model parameters
 
 ```{r}
-params_modl <- list(
+par <- list(
   kphio              = 5.000000e-02, # chosen to be too high for demonstration
   kphio_par_a        =-2.289344e-03,
   kphio_par_b        = 1.525094e+01,
