@@ -79,7 +79,6 @@ grsofun_collect <- function(
       dplyr::mutate(len = purrr::map_int(out, ~nrow(.))) |>
       dplyr::filter(len > 0) |>
       dplyr::select(-len) |>
-      # unnest
       tidyr::unnest(out) |>
       dplyr::select(-LON_str)
 
@@ -117,9 +116,18 @@ grsofun_collect_byLON <- function(
         year = lubridate::year(date),
         month = lubridate::month(date)
       ) |>
-      dplyr::group_by(sitename, site_info, year, month) |>
+      dplyr::group_by(sitename, year, month) |>
       dplyr::summarise(dplyr::across(dplyr::all_of(vars), \(x) mean(x, na.rm = TRUE)), .groups = "drop") |>
-      group_by(sitename, site_info) |> tidyr::nest(.key = "monthly_data")
+
+      # add lon and lat to data frame
+      left_join(
+        ddf |>
+          dplyr::select(sitename, site_info) |>
+          tidyr::unnest(site_info) |>
+          dplyr::select(sitename, lon, lat),
+        by = "sitename"
+      )
+
   } else {
     mdf <- dplyr::tibble()
   }
@@ -128,7 +136,7 @@ grsofun_collect_byLON <- function(
     return(mdf)
   } else {
     # write to file
-    outpath <- paste0(settings$dir_out, settings$fileprefix, "_mon_", LON_string, ".rds")
+    outpath <- paste0(settings$dir_out, settings$fileprefix, "_mon", LON_string, ".rds")
     message(paste("Writing file", outpath, "..."))
     readr::write_rds(file = outpath)
     return(NULL)
