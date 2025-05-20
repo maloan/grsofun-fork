@@ -4,6 +4,12 @@
 #' @export
 grsofun_run <- function(par, settings){
 
+  # Load CO2 dataset
+  df_co2 <- readr::read_csv(settings$file_in_co2) |>
+    dplyr::mutate(date = lubridate::ymd(date))  # Ensure consistent date format
+
+  settings$df_co2 <- df_co2
+
   # Create necessary output directories
   if (!is.na(settings$dir_out)){
     dir.create(settings$dir_out, recursive = TRUE, showWarnings = FALSE)
@@ -24,14 +30,17 @@ grsofun_run <- function(par, settings){
       # Do not parallelize
       # out <- dplyr::tibble(ilon = 292) |>
       out <- dplyr::tibble(LON_str = list_of_LON_str) |>
-          dplyr::mutate(out = purrr::map(
-            LON_str,
-            ~grsofun_run_byLON(
-              .,
-              par,
-              settings
-            ))
+        dplyr::mutate(out = purrr::map(
+          LON_str,
+          ~tryCatch(
+            grsofun_run_byLON(., par, settings),
+            error = function(e) {
+              message("Error in ", ., ": ", e$message)
+              return(NULL)
+            }
           )
+        )) |>
+        dplyr::filter(!purrr::map_lgl(out, is.null))
 
     } else {
       # Parallelise by longitudinal bands on multiple cores of a single node
@@ -66,13 +75,15 @@ grsofun_run <- function(par, settings){
         multidplyr::partition(cl) |>
         dplyr::mutate(out = purrr::map(
           LON_str,
-          ~grsofun_run_byLON(
-            .,
-            par,
-            settings
-          ))
-        )
-
+          ~tryCatch(
+            grsofun_run_byLON(., par, settings),
+            error = function(e) {
+              message("Error in ", ., ": ", e$message)
+              return(NULL)
+            }
+          )
+        )) |>
+        dplyr::filter(!purrr::map_lgl(out, is.null))
     }
 
   } else {
@@ -152,7 +163,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
     filnam_drivers <- file.path(settings$dir_out_drivers, paste0(settings$fileprefix, LON_string, ".rds"))
   }
 
-  filnam_output <- paste0(settings$dir_out, settings$fileprefix, LON_string, ".rds")
+  filnam_output <- file.path(settings$dir_out, paste0(settings$fileprefix, LON_string, ".rds"))
 
   if (settings$overwrite || !file.exists(filnam_output)){
 
@@ -205,7 +216,6 @@ grsofun_run_byLON <- function(LON_string, par, settings){
       # Read tidy climate forcing data by longitudinal band and convert units -
       # product-specific
       if (settings$source_climate == "watch-wfdei"){
-
         vars <- c("Tair", "Rainf", "Snowf", "Qair", "SWdown", "PSurf")
 
         # read tidy data for all variables and join into single data frame
@@ -236,10 +246,12 @@ grsofun_run_byLON <- function(LON_string, par, settings){
           ) |>
 
           # XXX try
+          dplyr::ungroup() |>
+          dplyr::left_join(settings$df_co2, by = c("datetime" = "date")) |>
           dplyr::mutate(
             netrad = NA,
             ccov = 0.5,
-            co2 = 400,
+            co2 = ifelse(is.na(co2), 400, co2)    # Fallback
           ) |>
           dplyr::select(
             lon,
