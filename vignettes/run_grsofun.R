@@ -65,7 +65,7 @@ settings <- list(
   source_climate = "watch-wfdei",
 
   # Dir in
-  dir_in_ssr = "/scratch/network/giub_geco/fbernhard"
+  dir_in_ssr = "/scratch/network/giub_geco/fbernhard/aggregated",
   file_in_co2 = "/storage/research/giub_geco/data_2/scratch/akurth/global/df_co2.csv",
   dir_in_climate = "/storage/research/giub_geco/data_2/scratch/akurth/wfdei_weedon_2014/data",
   file_in_fapar = "/storage/research/giub_geco/data_2/scratch/akurth/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",
