@@ -66,6 +66,34 @@ grsofun_tidy <- function(settings, ...){
     data.frame(input_path = settings$file_in_elv, msg = "No elv file found.")
   }
 
+  ## Netto solar radiation ----------------------------------------------------
+  if (!is.na(settings$dir_in_ssr) && file.exists(settings$dir_in_ssr)) {
+    list_ssr_files <- list.files(
+        settings$dir_in_ssr,
+        recursive = TRUE,
+        pattern = "ERA5Land.ssr.hh.[0-9]{4}.[0-9]{2}.nc",
+        full.names = TRUE
+      )
+
+    stopifnot(length(list_climate_files) > 0)
+
+    res_ssr <- map2tidy::map2tidy(
+        nclist     = list_ssr_files,
+        varnam     = "ssr",
+        lonnam     = "longitude",
+        latnam     = "latitude",
+        timenam    = "valid_time",
+        do_chunks  = TRUE,
+        outdir     = settings$dir_out_tidy_ssr,
+        fileprefix = "ERA5Land_hourly.ssr",
+        overwrite  = settings$overwrite,
+        fgetdate   = NA,
+        # filter_lon_between_degrees = c(1.0, 1.1)#, # TODO: only for development
+        ncores     = settings$ncores_max,  # parallel::detectCores()
+        ...
+      )
+  }
+
   ## Climate -----------------------------------------------------------------
   res_climate_df <-
     if (!is.na(settings$dir_in_climate) && file.exists(settings$dir_in_climate)) {
@@ -101,7 +129,7 @@ grsofun_tidy <- function(settings, ...){
           function(var) map2tidy::map2tidy(
             nclist  = list.files(
               file.path(settings$dir_in_climate, gsub("\\[VAR\\]", var, "[VAR]_daily")),
-              pattern = "daily_.*_2018..\\.nc$", # ".nc",  # XXX try
+              pattern = "*.nc", # ".nc",  # XXX try
               full.names = TRUE
               ),
             varnam  = var,
@@ -200,6 +228,7 @@ grsofun_tidy <- function(settings, ...){
     }
 
   return(list(
+    res_ssr        = res_ssr,
     res_landmask   = res_landmask,
     res_whc        = res_whc,
     res_elv        = res_elv,
