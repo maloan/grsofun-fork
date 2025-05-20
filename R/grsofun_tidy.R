@@ -71,7 +71,7 @@ grsofun_tidy <- function(settings, ...){
     list_ssr_files <- list.files(
         settings$dir_in_ssr,
         recursive = TRUE,
-        pattern = "ERA5Land.ssr.hh.[0-9]{4}.[0-9]{2}.nc",
+        pattern = "ERA5Land_UTCDaily.tot_ssr.[0-9]{4}.nc",
         full.names = TRUE
       )
 
@@ -79,13 +79,13 @@ grsofun_tidy <- function(settings, ...){
 
     res_ssr <- map2tidy::map2tidy(
         nclist     = list_ssr_files,
-        varnam     = "ssr",
+        varnam     = "tot_ssr",
         lonnam     = "longitude",
         latnam     = "latitude",
         timenam    = "valid_time",
         do_chunks  = TRUE,
         outdir     = settings$dir_out_tidy_ssr,
-        fileprefix = "ERA5Land_hourly.ssr",
+        fileprefix = "ERA5Land_hourly.tot_ssr",
         overwrite  = settings$overwrite,
         fgetdate   = NA,
         # filter_lon_between_degrees = c(1.0, 1.1)#, # TODO: only for development
