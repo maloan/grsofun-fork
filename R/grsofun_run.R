@@ -220,7 +220,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
 
         # read tidy data for all variables and join into single data frame
         kfFEC <- 2.04
-        df_climate <- purrr::map(
+        df_clim_raw <- purrr::map(
           vars,
           ~read_forcing_byvar_byLON(., LON_string, settings)
         ) |>
@@ -244,41 +244,34 @@ grsofun_run_byLON <- function(LON_string, par, settings){
               patm = PSurf
             )
           ) |>
-
-          # XXX try
           dplyr::ungroup() |>
-          dplyr::left_join(settings$df_co2, by = c("datetime" = "date")) |>
-          dplyr::mutate(
-            netrad = NA,
-            ccov = 0.5,
-            co2 = ifelse(is.na(co2), 400, co2)    # Fallback
-          ) |>
-          dplyr::select(
-            lon,
-            lat,
-            date = datetime, # map2tidy outputs 'datetime', but pmodel requires 'date'
-            temp = Tair,
-            rain = Rainf,
-            vpd,
-            ppfd,
-            netrad,
-            ccov,
-            snow = Snowf,
-            co2,
-            patm = PSurf,
-            tmin = Tair,
-            tmax = Tair
-          ) |>
+          dplyr::rename(date = datetime) |>
+          # join CO2
+          dplyr::left_join(settings$df_co2, by = "date") |>
+          dplyr::mutate(co2 = ifelse(is.na(co2), 400, co2))
 
+        # read and join SSR
+        fil_ssr <- file.path(settings$dir_out_tidy_ssr,
+                             paste0("ERA5Land_hourly_halfdeg.tot_ssr", LON_string, ".rds"))
+        if (!file.exists(fil_ssr)) stop("Missing SSR file: ", fil_ssr)
+
+        df_ssr <- readr::read_rds(fil_ssr) |>
+          tidyr::unnest(data) |>
+          dplyr::rename(date = datetime, ssr = tot_ssr)
+
+        df_clim_raw <- dplyr::left_join(df_clim_raw, df_ssr, by = c("lon","lat","date"))
+
+
+        # final nest
+        df_climate <- df_clim_raw |>
           dplyr::group_by(lon, lat) |>
-          tidyr::nest()
+          tidyr::nest(data = everything())
 
-        df_climate <- df_climate |>
+        # df_climate <- df_climate |>
           # parse datetimes from string (output of map2tidy) to datetimes
-          dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = lubridate::ymd(date))))
+         # dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = lubridate::ymd(date))))
 
       }
-
       if (settings$source_fapar == "modis"){
 
         # read monthly fAPAR data
