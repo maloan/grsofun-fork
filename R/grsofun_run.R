@@ -4,12 +4,6 @@
 #' @export
 grsofun_run <- function(par, settings){
 
-  # Load CO2 dataset
-  df_co2 <- readr::read_csv(settings$file_in_co2) |>
-    dplyr::mutate(date = lubridate::ymd(date))  # Ensure consistent date format
-
-  settings$df_co2 <- df_co2
-
   # Create necessary output directories
   if (!is.na(settings$dir_out)){
     dir.create(settings$dir_out, recursive = TRUE, showWarnings = FALSE)
@@ -17,6 +11,12 @@ grsofun_run <- function(par, settings){
   if (!is.na(settings$dir_out_drivers)){
     dir.create(settings$dir_out_drivers, recursive = TRUE, showWarnings = FALSE)
   }
+
+  # Load CO2 dataset
+  df_co2 <- readr::read_csv(settings$file_in_co2) |>
+    dplyr::mutate(date = lubridate::ymd(date))  # Ensure consistent date format
+
+  settings$df_co2 <- df_co2
 
   # Create vector of strings for identifying tidy files by longitudinal band
   df_lon_index <- map2tidy::get_df_lon_index(settings$grid)

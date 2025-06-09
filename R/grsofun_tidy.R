@@ -71,21 +71,21 @@ grsofun_tidy <- function(settings, ...){
     list_ssr_files <- list.files(
         settings$dir_in_ssr,
         recursive = TRUE,
-        pattern = "ERA5Land_UTCDaily.tot_ssr.[0-9]{4}.nc",
+        pattern = "ERA5Land_UTCDaily.tot_ssr.[0-9]{4}_halfdeg.nc", ##ERA5Land_UTCDaily.tot_ssr.[0-9]{4}_halfdeg.nc
         full.names = TRUE
       )
 
-    stopifnot(length(list_climate_files) > 0)
+    stopifnot(length(list_ssr_files) > 0)
 
     res_ssr <- map2tidy::map2tidy(
         nclist     = list_ssr_files,
         varnam     = "tot_ssr",
-        lonnam     = "longitude",
-        latnam     = "latitude",
+        lonnam     = "lon", ## lon
+        latnam     = "lat", ## lat
         timenam    = "valid_time",
         do_chunks  = TRUE,
         outdir     = settings$dir_out_tidy_ssr,
-        fileprefix = "ERA5Land_hourly.tot_ssr",
+        fileprefix = "ERA5Land_hourly_halfdeg.tot_ssr", ## "ERA5Land_hourly_halfdeg.tot_ssr", ERA5Land_hourly.tot_ssr
         overwrite  = settings$overwrite,
         fgetdate   = NA,
         # filter_lon_between_degrees = c(1.0, 1.1)#, # TODO: only for development
