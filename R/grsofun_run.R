@@ -140,6 +140,11 @@ grsofun_run <- function(par, settings){
 #
 # }
 
+# This function ...
+# 1. reads data from tidy data file, given for one longitudinal band
+# 2. contstructs the driver data frames
+# 3. runs the model for each pixel in this longitudinal band
+# 4. writes model output to file (for given longitudinal band)
 #' @export
 grsofun_run_byLON <- function(LON_string, par, settings){
   # e.g LON_string = "LON_+046.750"
@@ -147,11 +152,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
   # for DE-Tha (DE-Tha  lon = 13.6, lat = 51.0, elv = 380 m),
   #            use (lon = 13.75, lat = 50.75, sitename = grid_LON_+013.750_LAT_+050.750)
 
-  if (!is.na(settings$dir_out_drivers)){
-    dir.create(settings$dir_out_drivers, recursive = TRUE, showWarnings = FALSE) # TODO: make this emit a message
-    filnam_drivers <- file.path(settings$dir_out_drivers, paste0(settings$fileprefix, LON_string, ".rds"))
-  }
-
+  filnam_drivers <- file.path(settings$dir_out_drivers, paste0(settings$fileprefix, LON_string, ".rds"))
   filnam_output <- paste0(settings$dir_out, settings$fileprefix, LON_string, ".rds")
 
   if (settings$overwrite || !file.exists(filnam_output)){
@@ -454,7 +455,6 @@ grsofun_run_byLON <- function(LON_string, par, settings){
       par = par
     )
 
-    dir.create(settings$dir_out, recursive = TRUE, showWarnings = FALSE)  # TODO: make this emit a message
     message(paste("Writing file", filnam_output, "..."))
     readr::write_rds(out, file = filnam_output)
 

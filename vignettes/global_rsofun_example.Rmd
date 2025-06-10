@@ -83,26 +83,26 @@ settings <- list(
   # dir_out_tidy_climate = "/data/scratch/bstocker/wfdei_weedon_2014/data/tidy",  # path to where tidy climate forcing data is to be written
   dir_out_tidy_climate = "~/data/watch_wfdei/tidy",  # path to where tidy climate forcing data is to be written
 
-  source_fapar       = "modis",   # a string specifying fAPAR forcing dataset-specific variables
+  source_fapar = "modis",   # a string specifying fAPAR forcing dataset-specific variables
   # file_in_fapar      = "/data/archive/landcovermodis_friedl_2015/data/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",  # path to where fAPAR forcing data is located
-  file_in_fapar      = "~/data/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",  # path to where fAPAR forcing data is located
+  file_in_fapar = "~/data/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",  # path to where fAPAR forcing data is located
   dir_out_tidy_fapar = "~/data/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/tidy/",  # path to where tidy fAPAR forcing data is to be written
 
   # file_in_whc    = "/data/archive/whc_stocker_2023/data/cwdx80_forcing.nc",
   # file_in_whc      = "/data/archive/whc_stocker_2023/data/remap/cwdx80_forcing_0.5degbil.nc",
-  file_in_whc      = "~/data/mct_data/cwdx80_forcing_halfdeg.nc",
+  file_in_whc = "~/data/mct_data/cwdx80_forcing_halfdeg.nc",
   # dir_out_tidy_whc = "/data/scratch/bstocker/whc_stocker_2023/tidy", # path to where tidy  root zone storage capacity forcing data is to be written
   dir_out_tidy_whc = "~/data/mct_data/tidy/", # path to where tidy  root zone storage capacity forcing data is to be written
 
   # file_in_landmask      = "/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc", # path to where land mask data is located
-  file_in_landmask      = "~/data/watch_wfdei/WFDEI-elevation.nc", # path to where land mask data is located
+  file_in_landmask = "~/data/watch_wfdei/WFDEI-elevation.nc", # path to where land mask data is located
   # dir_out_tidy_landmask = "/data/scratch/bstocker/wfdei_weedon_2014/data/tidy", # path to where tidy land mask data is to be written
   dir_out_tidy_landmask = "~/data/watch_wfdei/tidy", # path to where tidy land mask data is to be written
 
   # file_in_elv      = "/data/archive/wfdei_weedon_2014/data/WFDEI-elevation.nc",        # path to where elevation data is located
   # dir_out_tidy_elv = "/data/scratch/bstocker/wfdei_weedon_2014/data/tidy" # path to where tidy elevation data is to be written
 
-  file_in_elv      = "~/data/watch_wfdei/WFDEI-elevation.nc",        # path to where elevation data is located
+  file_in_elv = "~/data/watch_wfdei/WFDEI-elevation.nc",        # path to where elevation data is located
   dir_out_tidy_elv = "~/data/watch_wfdei/tidy" # path to where tidy elevation data is to be written
 )
 ```
@@ -144,14 +144,16 @@ error <- grsofun_run(par, settings)
 ```{r eval=FALSE}
 # parallel on four coures
 settings$ncores_max <- 4
+settings$dir_out <- "~/data/grsofun_output/tmp1/"
 tictoc::tic()
-error <- grsofun_run(par, settings)
+error <- suppressMessages(grsofun_run(par, settings))
 tictoc::toc()
 
 # not parallel
 settings$ncores_max <- 1
+settings$dir_out <- "~/data/grsofun_output/tmp2/"
 tictoc::tic()
-error <- grsofun_run(par, settings)
+error <- suppressMessages(grsofun_run(par, settings))
 tictoc::toc()
 ```
 

@@ -5,13 +5,10 @@
 \title{Reads daily output and aggregates temporally. Returning the data is optional.
 By default, the aggregated data is written to tidy files by longitudinal bands.}
 \usage{
-grsofun_collect(settings, list_of_LON_str, return_data = FALSE)
+grsofun_collect(settings, return_data = FALSE)
 }
 \arguments{
 \item{settings}{...}
-
-\item{list_of_LON_str}{Longitude indices to process as a vector of strings,
-e.g. c("LON_+046.250", "LON_+046.750")}
 
 \item{return_data}{Flag whether to return loaded data in the R session. If FALSE
 only RDS files are written to disk, if TRUE RDS files are
