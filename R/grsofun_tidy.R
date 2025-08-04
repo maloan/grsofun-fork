@@ -208,7 +208,6 @@ grsofun_tidy <- function(settings, ...){
           ...
           )
 
-
         # # check:
         # readRDS(file.path(
         # "/data_2/scratch/era5land_munoz-sabater_2021/data",

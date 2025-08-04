@@ -24,13 +24,13 @@ grsofun_run <- function(par, settings){
       # Do not parallelize
       # out <- dplyr::tibble(ilon = 292) |>
       out <- dplyr::tibble(LON_str = list_of_LON_str) |>
-      dplyr::mutate(out = purrr::map(
-        LON_str,
-        ~grsofun_run_byLON(
-          .,
-          par,
-          settings
-          ))
+          dplyr::mutate(out = purrr::map(
+            LON_str,
+            ~grsofun_run_byLON(
+              .,
+              par,
+              settings
+            ))
           )
 
     } else {
@@ -261,6 +261,8 @@ grsofun_run_byLON <- function(LON_string, par, settings){
             dplyr::left_join,
             dplyr::join_by(lon, lat, datetime)
           ) |>
+
+          # convert units and rename
           dplyr::mutate(
             Tair = Tair - 273.15,  # K -> deg C
             ppfd = SWdown * kfFEC * 1.0e-6,  # W m-2 -> mol m-2 s-1
@@ -298,6 +300,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
             tmin = Tair,
             tmax = Tair
           ) |>
+          
           dplyr::group_by(lon, lat) |>
           tidyr::nest()
 
