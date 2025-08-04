@@ -17,21 +17,21 @@ grsofun_run <- function(par, settings){
   list_of_LON_str <- map2tidy::get_file_suffix(
     ilon = df_lon_index$lon_index,
     df_lon_index = df_lon_index
-    )
+  )
 
   if (settings$nnodes == 1){
     if (settings$ncores_max == 1){
       # Do not parallelize
       # out <- dplyr::tibble(ilon = 292) |>
       out <- dplyr::tibble(LON_str = list_of_LON_str) |>
-          dplyr::mutate(out = purrr::map(
-            LON_str,
-            ~grsofun_run_byLON(
-              .,
-              par,
-              settings
-            ))
-          )
+        dplyr::mutate(out = purrr::map(
+          LON_str,
+          ~grsofun_run_byLON(
+            .,
+            par,
+            settings
+          ))
+        )
 
     } else {
       # Parallelise by longitudinal bands on multiple cores of a single node
@@ -203,9 +203,51 @@ grsofun_run_byLON <- function(LON_string, par, settings){
       df <- df |>
         dplyr::mutate(whc = ifelse(is.na(whc), 200, whc))
 
+      # Canopy height extraction (bilinear)
+      canopy <- terra::rast(settings$file_in_canopy)
+      pts    <- terra::vect(df, geom = c("lon", "lat"), crs = "EPSG:4326")
+      can_vals <- terra::extract(canopy, pts, method = "bilinear", ID = FALSE)[[1]]
+
+      df <- df |> dplyr::mutate(
+        canopy_height    = can_vals,
+        reference_height = canopy_height
+      )
+
+      rm(canopy, pts, can_vals); gc()
       # Read tidy climate forcing data by longitudinal band and convert units -
       # product-specific
       if (settings$source_climate == "watch-wfdei"){
+
+        # SSR and STR
+        fil_ssr <- file.path(settings$dir_out_tidy_ssr,
+                             paste0("ERA5Land_halfdeg.tot_ssr", LON_string, ".rds"))
+        fil_str <- file.path(settings$dir_out_tidy_str,
+                             paste0("ERA5Land_halfdeg.tot_str", LON_string, ".rds"))
+
+        if (!file.exists(fil_ssr)) stop("Missing SSR file: ", fil_ssr)
+        if (!file.exists(fil_str)) stop("Missing STR file: ", fil_str)
+
+        df_str <- readr::read_rds(fil_str) |>
+          tidyr::unnest(data) |>
+          dplyr::rename(str = tot_str)
+
+        df_ssr <- readr::read_rds(fil_ssr) |>
+          tidyr::unnest(data) |>
+          dplyr::rename(ssr = tot_ssr)
+
+        df_netrad <- dplyr::inner_join(df_ssr, df_str,
+                                       by = c("lon", "lat", "datetime")) |>
+          dplyr::mutate(
+            datetime = as.Date(datetime),
+            netrad = ssr + str
+          ) |>
+          dplyr::select(lon, lat, datetime, netrad)
+        rm(df_ssr, df_str); gc()
+
+
+        # CO2 data
+        df_co2 <- readr::read_csv(settings$file_in_co2, show_col_types = FALSE) |>
+          dplyr::rename(co2 = mean)
 
         vars <- c("Tair", "Rainf", "Snowf", "Qair", "SWdown", "PSurf")
 
@@ -219,13 +261,10 @@ grsofun_run_byLON <- function(LON_string, par, settings){
             dplyr::left_join,
             dplyr::join_by(lon, lat, datetime)
           ) |>
-
-          # convert units and rename
-          dplyr::rowwise() |>
           dplyr::mutate(
             Tair = Tair - 273.15,  # K -> deg C
             ppfd = SWdown * kfFEC * 1.0e-6,  # W m-2 -> mol m-2 s-1
-            vapr = rgeco::calc_vp(
+                        vapr = rgeco::calc_vp(
               qair = Qair,
               patm = PSurf
             ),
@@ -233,19 +272,20 @@ grsofun_run_byLON <- function(LON_string, par, settings){
               eact = vapr,
               tc = Tair,
               patm = PSurf
-            )
+            ),
+            date  = as.Date(datetime),
+            year  = lubridate::year(datetime),
+            ccov   = 0.5,
+            co2    = 400
           ) |>
-
-          # XXX try
-          dplyr::mutate(
-            netrad = NA,
-            ccov = 0.5,
-            co2 = 400,
-          ) |>
-          dplyr::select(
+          dplyr::left_join(df_co2, by = "year") |>
+          dplyr::mutate(co2 = ifelse(is.na(co2.y), co2.x, co2.y)) |>
+          dplyr::select(-co2.x, -co2.y) |>
+          dplyr::left_join(df_netrad, by = c("lon", "lat", "date" = "datetime")) |>
+          dplyr::transmute(
             lon,
             lat,
-            date = datetime, # map2tidy outputs 'datetime', but pmodel requires 'date'
+            date,
             temp = Tair,
             rain = Rainf,
             vpd,
@@ -263,9 +303,9 @@ grsofun_run_byLON <- function(LON_string, par, settings){
           tidyr::nest()
 
         df_climate <- df_climate |>
-          # parse datetimes from string (output of map2tidy) to datetimes
-          dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = lubridate::ymd(date))))
+          dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = as.Date(date))))
 
+        rm(df_co2, df_netrad); gc()
       }
 
       if (settings$source_fapar == "modis"){
@@ -475,7 +515,7 @@ read_forcing_byvar_byLON <- function(var, LON_string, settings){
       stop(paste("File does not exist:", filnam))
     }
     df <- readr::read_rds(filnam) |>
-    tidyr::unnest(data)
+      tidyr::unnest(data)
   }
 
   return(df)
