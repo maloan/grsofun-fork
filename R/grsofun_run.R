@@ -17,21 +17,21 @@ grsofun_run <- function(par, settings){
   list_of_LON_str <- map2tidy::get_file_suffix(
     ilon = df_lon_index$lon_index,
     df_lon_index = df_lon_index
-  )
+    )
 
   if (settings$nnodes == 1){
     if (settings$ncores_max == 1){
       # Do not parallelize
       # out <- dplyr::tibble(ilon = 292) |>
       out <- dplyr::tibble(LON_str = list_of_LON_str) |>
-        dplyr::mutate(out = purrr::map(
-          LON_str,
-          ~grsofun_run_byLON(
-            .,
-            par,
-            settings
+      dplyr::mutate(out = purrr::map(
+        LON_str,
+        ~grsofun_run_byLON(
+          .,
+          par,
+          settings
           ))
-        )
+          )
 
     } else {
       # Parallelise by longitudinal bands on multiple cores of a single node
@@ -264,7 +264,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
           dplyr::mutate(
             Tair = Tair - 273.15,  # K -> deg C
             ppfd = SWdown * kfFEC * 1.0e-6,  # W m-2 -> mol m-2 s-1
-                        vapr = rgeco::calc_vp(
+            vapr = rgeco::calc_vp(
               qair = Qair,
               patm = PSurf
             ),
@@ -298,7 +298,6 @@ grsofun_run_byLON <- function(LON_string, par, settings){
             tmin = Tair,
             tmax = Tair
           ) |>
-
           dplyr::group_by(lon, lat) |>
           tidyr::nest()
 
@@ -515,7 +514,7 @@ read_forcing_byvar_byLON <- function(var, LON_string, settings){
       stop(paste("File does not exist:", filnam))
     }
     df <- readr::read_rds(filnam) |>
-      tidyr::unnest(data)
+    tidyr::unnest(data)
   }
 
   return(df)
