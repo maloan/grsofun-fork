@@ -263,6 +263,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
           ) |>
 
           # convert units and rename
+          dplyr::rowwise() |>
           dplyr::mutate(
             Tair = Tair - 273.15,  # K -> deg C
             ppfd = SWdown * kfFEC * 1.0e-6,  # W m-2 -> mol m-2 s-1
@@ -300,12 +301,13 @@ grsofun_run_byLON <- function(LON_string, par, settings){
             tmin = Tair,
             tmax = Tair
           ) |>
-          
+
           dplyr::group_by(lon, lat) |>
           tidyr::nest()
 
         df_climate <- df_climate |>
-          dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = as.Date(date))))
+          # parse datetimes from string (output of map2tidy) to datetimes
+          dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., date = lubridate::ymd(date))))
 
         rm(df_co2, df_netrad); gc()
       }
@@ -313,7 +315,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
       if (settings$source_fapar == "modis"){
 
         # read monthly fAPAR data
-        filnam <- paste0(settings$dir_out_tidy_fapar, "/MODIS-C006_MOD15A2_LAI_FPAR_zmaw", LON_string, ".rds")
+        filnam <- paste0(settings$dir_out_tidy_fapar, "/MODIS-C061_MOD15A2H_LAI_FPAR_zmaw", LON_string, ".rds")
         if (!file.exists(filnam)){
           stop(paste("File does not exist: ", filnam))
         }
