@@ -241,7 +241,7 @@ grsofun_tidy <- function(settings, ...){
           timenam = "time",
           do_chunks = TRUE,
           outdir = settings$dir_out_tidy_fapar,
-          fileprefix = "MODIS-C006_MOD15A2_LAI_FPAR_zmaw",
+          fileprefix = "MODIS-C061_MOD15A2H_LAI_FPAR_zmaw",
           overwrite = settings$overwrite,
           # filter_lon_between_degrees = c(-1,1), # TODO: only for development
           ncores     = settings$ncores_max,  # parallel::detectCores()
