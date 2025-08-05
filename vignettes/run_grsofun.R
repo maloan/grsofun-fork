@@ -41,8 +41,10 @@ settings <- list(
   ### simulation config:
   fileprefix = "test",
   model = "pmodel",
-  year_start = 2018,  # xxx not yet handled
-  year_end = 2018,    # xxx not yet handled
+  year_start = 2018,
+  # xxx not yet handled
+  year_end = 2018,
+  # xxx not yet handled
   spinupyears = 10,
   recycle = 1,
 
@@ -54,7 +56,7 @@ settings <- list(
   dir_out = "/storage/research/giub_geco/data_2/scratch/akurth/grsofun_output/",
   dir_out_nc = "/storage/research/giub_geco/data_2/scratch/akurth/grsofun_output/",
   save = list(gpp = "mon"),
-  overwrite = FALSE,
+  overwrite = TRUE,
 
   ### tidy model input config:
   grid = list(
@@ -76,7 +78,7 @@ settings <- list(
   file_in_canopy = "/storage/research/giub_geco/data_2/scratch/akurth/vegheight_lang_2023/canopy_0.5deg_avg.tif",
   file_in_co2 = "/storage/research/giub_geco/data_2/scratch/akurth/global/co2_annmean_mlo.csv",
   dir_in_climate = "/storage/research/giub_geco/data_2/scratch/akurth/wfdei_weedon_2014/data",
-  file_in_fapar = "/storage/research/giub_geco/data_2/scratch/akurth/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/MODIS-C006_MOD15A2__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2018__MON__fv0.02.nc",
+  file_in_fapar = "/storage/research/giub_geco/data_2/scratch/akurth/modis_lai_fpar/MODIS-C061_MOD15A2H__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2022_2024__MON__fv0.03.nc",
   file_in_whc = "/storage/research/giub_geco/data_2/scratch/fbernhard/whc_stocker_2023/data/remap/cwdx80_forcing_0.5degbil.nc",
   file_in_landmask = "/storage/research/giub_geco/data_2/scratch/akurth/wfdei_weedon_2014/data/WFDEI-elevation.nc",
   file_in_elv = "/storage/research/giub_geco/data_2/scratch/akurth/wfdei_weedon_2014/data/WFDEI-elevation.nc",
@@ -87,7 +89,7 @@ settings <- list(
 
   dir_out_drivers = "/storage/research/giub_geco/data_2/scratch/akurth/grsofun_input",
   dir_out_tidy_climate = "/storage/research/giub_geco/data_2/scratch/akurth/watch_wfdei/tidy",
-  dir_out_tidy_fapar = "/storage/research/giub_geco/data_2/scratch/akurth/MODIS-C006_MOD15A2_LAI_FPAR_zmaw/tidy",
+  dir_out_tidy_fapar = "/storage/research/giub_geco/data_2/scratch/akurth/modis_lai_fpar/global/tidy",
   dir_out_tidy_whc = "/storage/research/giub_geco/data_2/scratch/akurth/mct_data/tidy",
   dir_out_tidy_landmask = "/storage/research/giub_geco/data_2/scratch/akurth/watch_wfdei/tidy",
   dir_out_tidy_elv = "/storage/research/giub_geco/data_2/scratch/akurth/watch_wfdei/tidy"
@@ -173,7 +175,7 @@ gg2 <- df |>
   labs(subtitle = "July monthly mean")
 
 cowplot::plot_grid(gg1, gg2, ncol = 1)
-rm(df, gg1, gg2, coast)
+rm(gg1, gg2, coast)
 gc()
 
 # -----------------------------------------------------------
