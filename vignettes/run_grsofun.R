@@ -56,7 +56,7 @@ settings <- list(
   dir_out = "/storage/research/giub_geco/data_2/scratch/akurth/grsofun_output/",
   dir_out_nc = "/storage/research/giub_geco/data_2/scratch/akurth/grsofun_output/",
   save = list(gpp = "mon"),
-  overwrite = TRUE,
+  overwrite = FALSE,
 
   ### tidy model input config:
   grid = list(
@@ -75,7 +75,7 @@ settings <- list(
   # Dir in
   dir_in_ssr = "/storage/research/giub_geco/data_2/scratch/akurth/ERA5Land/remap",
   dir_in_str = "/storage/research/giub_geco/data_2/scratch/akurth/ERA5Land/remap",
-  file_in_canopy = "/storage/research/giub_geco/data_2/scratch/akurth/vegheight_lang_2023/canopy_0.5deg_avg.tif",
+  file_in_canopy = "/storage/research/giub_geco/data_2/scratch/akurth/vegheight_lang_2023/canopy_mean_0.5deg.nc",
   file_in_co2 = "/storage/research/giub_geco/data_2/scratch/akurth/global/co2_annmean_mlo.csv",
   dir_in_climate = "/storage/research/giub_geco/data_2/scratch/akurth/wfdei_weedon_2014/data",
   file_in_fapar = "/storage/research/giub_geco/data_2/scratch/akurth/modis_lai_fpar/MODIS-C061_MOD15A2H__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2022_2024__MON__fv0.03.nc",
@@ -86,6 +86,7 @@ settings <- list(
   # Dir out
   dir_out_tidy_ssr = "/storage/research/giub_geco/data_2/scratch/akurth/ERA5Land/remap/tidy",
   dir_out_tidy_str = "/storage/research/giub_geco/data_2/scratch/akurth/ERA5Land/remap/tidy",
+  dir_out_tidy_canopy = "/storage/research/giub_geco/data_2/scratch/akurth/vegheight_lang_2023/tidy",
 
   dir_out_drivers = "/storage/research/giub_geco/data_2/scratch/akurth/grsofun_input",
   dir_out_tidy_climate = "/storage/research/giub_geco/data_2/scratch/akurth/watch_wfdei/tidy",
