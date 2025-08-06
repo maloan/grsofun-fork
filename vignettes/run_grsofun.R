@@ -78,7 +78,7 @@ settings <- list(
   file_in_canopy = "/storage/research/giub_geco/data_2/scratch/akurth/vegheight_lang_2023/canopy_mean_0.5deg.nc",
   file_in_co2 = "/storage/research/giub_geco/data_2/scratch/akurth/global/co2_annmean_mlo.csv",
   dir_in_climate = "/storage/research/giub_geco/data_2/scratch/akurth/wfdei_weedon_2014/data",
-  file_in_fapar = "/storage/research/giub_geco/data_2/scratch/akurth/modis_lai_fpar/MODIS-C061_MOD15A2H__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2022_2024__MON__fv0.03.nc",
+  file_in_fapar = "/storage/research/giub_geco/data_2/scratch/akurth/modis_lai_fpar/MODIS-C061_MOD15A2H__LAI_FPAR__LPDAAC__GLOBAL_0.5degree__UHAM-ICDC__2000_2024__MON__fv0.03.nc",
   file_in_whc = "/storage/research/giub_geco/data_2/scratch/fbernhard/whc_stocker_2023/data/remap/cwdx80_forcing_0.5degbil.nc",
   file_in_landmask = "/storage/research/giub_geco/data_2/scratch/akurth/wfdei_weedon_2014/data/WFDEI-elevation.nc",
   file_in_elv = "/storage/research/giub_geco/data_2/scratch/akurth/wfdei_weedon_2014/data/WFDEI-elevation.nc",
