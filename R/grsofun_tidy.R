@@ -66,6 +66,24 @@ grsofun_tidy <- function(settings, ...){
     data.frame(input_path = settings$file_in_elv, msg = "No elv file found.")
   }
 
+  ## Canopy height -----------------------------------------------------------
+  res_canopy <- if (!is.na(settings$file_in_canopy) && file.exists(settings$file_in_canopy)) {
+    map2tidy::map2tidy(
+      nclist = settings$file_in_canopy,
+      varnam = "Band1",
+      lonnam = "lon",
+      latnam = "lat",
+      do_chunks = TRUE,
+      outdir = settings$dir_out_tidy_canopy,
+      fileprefix = "canopy_height",
+      overwrite = settings$overwrite,
+      ncores    = settings$ncores_max,  # parallel::detectCores()
+      ...
+    )
+  } else {
+    data.frame(input_path = settings$file_in_canopy, msg = "No canopy file found.")
+  }
+
   ## Surface net solar radiation ----------------------------------------------------
   res_ssr <- if (!is.na(settings$dir_in_ssr) &&
                  dir.exists(settings$dir_in_ssr)) {
@@ -94,7 +112,6 @@ grsofun_tidy <- function(settings, ...){
     data.frame(input_path = settings$dir_in_ssr, msg = "No Surface net solar radiation directory found.")
   }
 
-
   ## Surface net thermal radiation ----------------------------------------------------
   res_str <- if (!is.na(settings$dir_in_str) &&
                  dir.exists(settings$dir_in_str)) {
@@ -122,8 +139,6 @@ grsofun_tidy <- function(settings, ...){
   } else {
     data.frame(input_path = settings$dir_in_str, msg = "No Surface net thermal radiation directory found.")
   }
-
-
 
   ## Climate -----------------------------------------------------------------
   res_climate_df <-
@@ -264,6 +279,7 @@ grsofun_tidy <- function(settings, ...){
     res_landmask   = res_landmask,
     res_whc        = res_whc,
     res_elv        = res_elv,
+    res_canopy     = res_canopy,
     res_climate_df = res_climate_df,
     res_fapar      = res_fapar
   ))
