@@ -32,7 +32,6 @@ Load libraries for this vignette.
 library(ggplot2)
 library(dplyr)
 library(rnaturalearth)
-library(rnaturalearthdata)
 library(cowplot)
 library(map2tidy)
 ```
@@ -172,7 +171,7 @@ df <- grsofun_collect(settings, return_data = TRUE)
 ## Example plot
 
 Plot a map.
-```{r}
+```{r map-plot, eval=FALSE}
 coast <- rnaturalearth::ne_coastline(
   scale = 110, 
   returnclass = "sf"
