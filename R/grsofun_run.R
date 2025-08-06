@@ -203,17 +203,30 @@ grsofun_run_byLON <- function(LON_string, par, settings){
       df <- df |>
         dplyr::mutate(whc = ifelse(is.na(whc), 200, whc))
 
-      # Canopy height extraction (bilinear)
-      canopy <- terra::rast(settings$file_in_canopy)
-      pts    <- terra::vect(df, geom = c("lon", "lat"), crs = "EPSG:4326")
-      can_vals <- terra::extract(canopy, pts, method = "bilinear", ID = FALSE)[[1]]
-
-      df <- df |> dplyr::mutate(
-        canopy_height    = can_vals,
-        reference_height = canopy_height
+      # Canopy height
+      filnam <- file.path(
+        settings$dir_out_tidy_canopy,
+        paste0("canopy_height", LON_string, ".rds")
       )
+      if (!file.exists(filnam)){
+        stop(paste("File does not exist:", filnam))
+      }
+      df_canopy_height <- readr::read_rds(filnam)
+      if (nrow(df_canopy_height) > 0){
+        df <- df |>
+          dplyr::left_join(
+            df_canopy_height |>
+              dplyr::rename(canopy_height = Band1),
+            dplyr::join_by(lon, lat)) |>
+          dplyr::mutate(
+            reference_height = canopy_height
+            )
+        } else {
+          df <- df |>
+            dplyr::mutate(reference_height = NA, canopy_height = NA)
+          }
+      rm(df_canopy_height)
 
-      rm(canopy, pts, can_vals); gc()
       # Read tidy climate forcing data by longitudinal band and convert units -
       # product-specific
       if (settings$source_climate == "watch-wfdei"){
