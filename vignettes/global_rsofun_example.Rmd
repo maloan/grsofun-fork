@@ -164,7 +164,7 @@ Read outputs saved in separate files for each longitudinal band. Collect data fr
 
 This can either write the aggregated data again to tidy files by longitudinal band, or return the temporally aggregated data into the R environment.
 
-```{r eval=TRUE, message=FALSE}
+```{r eval=FALSE, message=FALSE}
 df <- grsofun_collect(settings, return_data = TRUE)
 ```
 
