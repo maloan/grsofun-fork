@@ -276,7 +276,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
           ) |>
 
           # convert units and rename
-          dplyr::rowwise() |>
+          #dplyr::rowwise() |>
           dplyr::mutate(
             Tair = Tair - 273.15,  # K -> deg C
             ppfd = SWdown * kfFEC * 1.0e-6,  # W m-2 -> mol m-2 s-1
