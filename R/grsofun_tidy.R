@@ -34,7 +34,7 @@ grsofun_tidy <- function(settings, ...){
   res_whc <- if (!is.na(settings$file_in_whc) && file.exists(settings$file_in_whc)) {
     map2tidy(
       nclist = settings$file_in_whc,
-      varnam = "cwdx80_forcing",
+      varnam = "whc_2m", #"cwdx80_forcing",
       lonnam = "lon",
       latnam = "lat",
       do_chunks = TRUE,
@@ -149,7 +149,7 @@ grsofun_tidy <- function(settings, ...){
       if (settings$source_climate == "watch-wfdei"){
 
         # data-product specific variable names
-        vars <- c("Tair", "Rainf", "Snowf", "Qair", "SWdown", "PSurf")
+        vars <- c("Tair", "Rainf", "Snowf", "Qair", "SWdown", "PSurf", "Wind")
 
         settings$grid_climate <- list(
           lonnam = "lon",
