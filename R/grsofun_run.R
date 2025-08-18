@@ -192,7 +192,11 @@ grsofun_run_byLON <- function(LON_string, par, settings){
         df <- df |>
           dplyr::left_join(
             df_whc |>
-              dplyr::rename(whc = cwdx80_forcing),
+              (\(x) {
+                nm <- if ("cwdx80_forcing" %in% names(x)) "cwdx80_forcing" else "whc_2m"
+                dplyr::rename(
+                  x, whc = !!rlang::sym(nm))
+                })(),
             dplyr::join_by(lon, lat)
           )
       } else {
@@ -262,7 +266,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
         df_co2 <- readr::read_csv(settings$file_in_co2, show_col_types = FALSE) |>
           dplyr::rename(co2 = mean)
 
-        vars <- c("Tair", "Rainf", "Snowf", "Qair", "SWdown", "PSurf")
+        vars <- c("Tair", "Rainf", "Snowf", "Qair", "SWdown", "PSurf", "Wind")
 
         # read tidy data for all variables and join into single data frame
         kfFEC <- 2.04
@@ -274,6 +278,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
             dplyr::left_join,
             dplyr::join_by(lon, lat, datetime)
           ) |>
+          dplyr::rename(vwind = Wind) |>
 
           # convert units and rename
           #dplyr::rowwise() |>
@@ -311,6 +316,7 @@ grsofun_run_byLON <- function(LON_string, par, settings){
             snow = Snowf,
             co2,
             patm = PSurf,
+            vwind,
             tmin = Tair,
             tmax = Tair
           ) |>
@@ -402,11 +408,11 @@ grsofun_run_byLON <- function(LON_string, par, settings){
 
           # combine to capture all gridcells of the climate forcing
           # if fapar forcing is missing, set fapar = 0
+          df_fapar <- df_fapar |>
+            tidyr::unnest(data)
           df_forcing <- df_climate |>
             tidyr::unnest(data) |>
-            dplyr::left_join(
-              df_fapar |>
-                tidyr::unnest(data),
+            dplyr::left_join(df_fapar,
               by = c("lon", "lat", "date")
             ) |>
             dplyr::mutate(fapar = ifelse(is.na(fapar), 0, fapar)) |>
